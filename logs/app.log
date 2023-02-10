@@ -1,0 +1,22 @@
+2023/02/10 15:35:26.249 [I] [app.go:214]  http server Running on http://:11843
+2023/02/10 15:39:20.549 [I] [app.go:214]  http server Running on http://:11843
+2023/02/10 15:40:04.733 [I] [app.go:214]  http server Running on http://:11843
+2023/02/10 15:40:16.747 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|      535.3µs|   match|[44m GET     [0m /cabinet/a   r:/cabinet*
+2023/02/10 15:41:04.162 [I] [app.go:214]  http server Running on http://:11843
+2023/02/10 15:41:05.410 [I] [app.go:214]  http server Running on http://:11843
+2023/02/10 15:41:57.737 [I] [app.go:214]  http server Running on http://:11843
+2023/02/10 15:42:46.641 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|      546.2µs|   match|[44m GET     [0m /exam   r:/exam*
+2023/02/10 15:44:41.114 [I] [app.go:214]  http server Running on http://:11843
+2023/02/10 15:44:58.614 [I] [app.go:214]  http server Running on http://:11843
+2023/02/10 15:46:21.428 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|      962.6µs|   match|[44m GET     [0m /exam/api/s   r:/exam*
+2023/02/10 15:46:58.782 [I] [app.go:214]  http server Running on http://:11843
+2023/02/10 15:46:58.895 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|     1.0693ms|   match|[44m GET     [0m /exam/api/user/info   r:/exam*
+2023/02/10 15:47:08.820 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|           0s|   match|[44m GET     [0m /exam/api/user/info   r:/exam*
+2023/02/10 15:47:23.296 [I] [app.go:214]  http server Running on http://:11843
+2023/02/10 15:47:32.421 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|        537µs|   match|[44m GET     [0m /exam/api/user/info   r:/exam*
+2023/02/10 15:47:53.458 [I] [app.go:214]  http server Running on http://:11843
+2023/02/10 15:48:00.127 [I] [base.go:101]  请求参数错误: error = unexpected end of JSON input, req = 
+2023/02/10 15:48:07.587 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|      522.1µs|   match|[44m GET     [0m /exam   r:/exam*
+2023/02/10 15:48:11.545 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|      200.4µs|   match|[44m GET     [0m /exam/api/user/info2   r:/exam*
+2023/02/10 15:48:35.930 [I] [app.go:214]  http server Running on http://:11843
+2023/02/10 15:48:38.494 [I] [app.go:214]  http server Running on http://:11843
