@@ -15,10 +15,16 @@ func init() {
 
 		// api
 		beego.NSNamespace("/api",
+			// 试题
+			beego.NSNamespace("/question",
+				beego.NSRouter("/list", &controllers.QuestionController{}, "Post:List"),
+			),
 			// 用户
 			beego.NSNamespace("/user",
 				beego.NSRouter("/info", &controllers.UserController{}, "Get,Post:QueryUserInfo"),
 			),
+			// 权限
+			beego.NSRouter("/getAsyncRoutes", &controllers.UserController{}, "Post:GetAsyncRoutes"),
 		),
 	))
 }

@@ -1,22 +1,19 @@
-2023/02/10 15:35:26.249 [I] [app.go:214]  http server Running on http://:11843
-2023/02/10 15:39:20.549 [I] [app.go:214]  http server Running on http://:11843
-2023/02/10 15:40:04.733 [I] [app.go:214]  http server Running on http://:11843
-2023/02/10 15:40:16.747 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|      535.3µs|   match|[44m GET     [0m /cabinet/a   r:/cabinet*
-2023/02/10 15:41:04.162 [I] [app.go:214]  http server Running on http://:11843
-2023/02/10 15:41:05.410 [I] [app.go:214]  http server Running on http://:11843
-2023/02/10 15:41:57.737 [I] [app.go:214]  http server Running on http://:11843
-2023/02/10 15:42:46.641 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|      546.2µs|   match|[44m GET     [0m /exam   r:/exam*
-2023/02/10 15:44:41.114 [I] [app.go:214]  http server Running on http://:11843
-2023/02/10 15:44:58.614 [I] [app.go:214]  http server Running on http://:11843
-2023/02/10 15:46:21.428 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|      962.6µs|   match|[44m GET     [0m /exam/api/s   r:/exam*
-2023/02/10 15:46:58.782 [I] [app.go:214]  http server Running on http://:11843
-2023/02/10 15:46:58.895 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|     1.0693ms|   match|[44m GET     [0m /exam/api/user/info   r:/exam*
-2023/02/10 15:47:08.820 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|           0s|   match|[44m GET     [0m /exam/api/user/info   r:/exam*
-2023/02/10 15:47:23.296 [I] [app.go:214]  http server Running on http://:11843
-2023/02/10 15:47:32.421 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|        537µs|   match|[44m GET     [0m /exam/api/user/info   r:/exam*
-2023/02/10 15:47:53.458 [I] [app.go:214]  http server Running on http://:11843
-2023/02/10 15:48:00.127 [I] [base.go:101]  请求参数错误: error = unexpected end of JSON input, req = 
-2023/02/10 15:48:07.587 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|      522.1µs|   match|[44m GET     [0m /exam   r:/exam*
-2023/02/10 15:48:11.545 [D] [router.go:969]  |  192.168.0.103|[47m 302 [0m|      200.4µs|   match|[44m GET     [0m /exam/api/user/info2   r:/exam*
-2023/02/10 15:48:35.930 [I] [app.go:214]  http server Running on http://:11843
-2023/02/10 15:48:38.494 [I] [app.go:214]  http server Running on http://:11843
+2023/03/06 12:23:02.639 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 12:23:03.942 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 12:23:05.616 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:00.553 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:01.999 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:03.624 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:05.202 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:06.825 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:08.480 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:10.159 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:11.715 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:13.346 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:15.057 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:16.777 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:18.430 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:20.300 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:21.984 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:23.876 [I] [app.go:214]  http server Running on http://:11549
+2023/03/06 14:48:28.759 [I] [app.go:214]  http server Running on http://:11549
