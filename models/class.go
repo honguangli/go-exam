@@ -13,10 +13,36 @@ type Class struct {
 	Desc   string `orm:"column(desc)" form:"desc" json:"desc"`
 }
 
+// 状态
+const (
+	CLASS_STATUS_IGNORE = -1 // 忽略状态
+	CLASS_DISABLE       = 0  // 禁用
+	CLASS_ENABLE        = 1  // 正常
+)
+
+// 查询详情参数
+type ReadClassDetailParam struct {
+	ID int `json:"id"`
+}
+
 // 查询列表参数
 type ReadClassListParam struct {
 	BaseQueryParam
-	ClosePage bool `form:"close_page" json:"close_page"`
+	Name      string `json:"name"`
+	Status    int    `json:"status"`
+	ClosePage bool   `form:"close_page" json:"close_page"`
+}
+
+// 删除参数
+type DeleteClassDetailParam struct {
+	ID   int   `json:"id"`
+	List []int `json:"list"`
+}
+
+// 更新班级用户参数
+type UpdateClassUserParam struct {
+	ID       int   `json:"id"`
+	UserList []int `json:"user_list"`
 }
 
 // 初始化
@@ -61,6 +87,14 @@ func ReadClassOne(id int) (m Class, err error) {
 func ReadClassList(param ReadClassListParam) (list []*Class, total int64, err error) {
 	list = make([]*Class, 0)
 	query := orm.NewOrm().QueryTable(ClassTBName())
+
+	if len(param.Name) > 0 {
+		query = query.Filter("name_icontains", param.Name)
+	}
+
+	if param.Status != CLASS_STATUS_IGNORE {
+		query = query.Filter("status", param.Status)
+	}
 
 	sortOrder := "id"
 	switch param.Sort {
@@ -172,5 +206,39 @@ func DeleteClassOne(id int) (num int64, err error) {
 func DeleteClassMulti(ids []int) (num int64, err error) {
 	o := orm.NewOrm()
 	num, err = o.QueryTable(ClassTBName()).Filter("id__in", ids).Delete()
+	return
+}
+
+// 更新班级用户
+func UpdateClassUserMulti(param UpdateClassUserParam) (err error) {
+	var list = make([]*ClassUserRel, len(param.UserList))
+	for k, v := range param.UserList {
+		list[k] = &ClassUserRel{
+			ClassID: param.ID,
+			UserID:  v,
+		}
+	}
+
+	o := orm.NewOrm()
+	err = o.Begin()
+	if err != nil {
+		return
+	}
+
+	// 删除旧关系
+	_, err = o.Raw("DELETE FROM class_user_rel WHERE class_id = ?", param.ID).Exec()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 添加新关系
+	_, err = o.InsertMulti(100, list)
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	err = o.Commit()
 	return
 }

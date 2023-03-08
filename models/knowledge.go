@@ -12,10 +12,22 @@ type Knowledge struct {
 	Desc string `orm:"column(desc)" form:"desc" json:"desc"`
 }
 
+// 查询详情参数
+type ReadKnowledgeDetailParam struct {
+	ID int `json:"id"`
+}
+
 // 查询列表参数
 type ReadKnowledgeListParam struct {
 	BaseQueryParam
-	ClosePage bool `form:"close_page" json:"close_page"`
+	Name      string `json:"name"`
+	ClosePage bool   `form:"close_page" json:"close_page"`
+}
+
+// 删除参数
+type DeleteKnowledgeDetailParam struct {
+	ID   int   `json:"id"`
+	List []int `json:"list"`
 }
 
 // 初始化
@@ -60,6 +72,10 @@ func ReadKnowledgeOne(id int) (m Knowledge, err error) {
 func ReadKnowledgeList(param ReadKnowledgeListParam) (list []*Knowledge, total int64, err error) {
 	list = make([]*Knowledge, 0)
 	query := orm.NewOrm().QueryTable(KnowledgeTBName())
+
+	if len(param.Name) > 0 {
+		query = query.Filter("name__icontains", param.Name)
+	}
 
 	sortOrder := "id"
 	switch param.Sort {

@@ -7,16 +7,47 @@ import (
 
 // 角色表
 type Role struct {
-	ID   int    `orm:"column(id)" form:"id" json:"id"`
-	Name string `orm:"column(name)" form:"name" json:"name"`
-	Seq  int    `orm:"column(seq)" form:"seq" json:"seq"`
-	Memo string `orm:"column(memo)" form:"memo" json:"memo"`
+	ID         int    `orm:"column(id)" form:"id" json:"id"`
+	Name       string `orm:"column(name)" form:"name" json:"name"`
+	Code       string `orm:"column(code)" form:"code" json:"code"`
+	Seq        int    `orm:"column(seq)" form:"seq" json:"seq"`
+	Status     int    `orm:"column(status)" form:"status" json:"status"`
+	CreateTime int64  `orm:"column(create_time)" form:"create_time" json:"create_time"`
+	UpdateTime int64  `orm:"column(update_time)" form:"update_time" json:"update_time"`
+	Memo       string `orm:"column(memo)" form:"memo" json:"memo"`
+}
+
+// 状态
+const (
+	ROLE_STATUS_IGNORE = -1 // 忽略状态
+	ROLE_DISABLE       = 0  // 禁用
+	ROLE_ENABLE        = 1  // 正常
+)
+
+// 查询详情参数
+type ReadRoleDetailParam struct {
+	ID int `json:"id"`
 }
 
 // 查询列表参数
 type ReadRoleListParam struct {
 	BaseQueryParam
-	ClosePage bool `form:"close_page" json:"close_page"`
+	Name      string `json:"name"`
+	Code      string `json:"code"`
+	Status    int    `json:"status"`
+	ClosePage bool   `form:"close_page" json:"close_page"`
+}
+
+// 删除参数
+type DeleteRoleDetailParam struct {
+	ID   int   `json:"id"`
+	List []int `json:"list"`
+}
+
+// 更新角色权限参数
+type UpdateRolePermissionParam struct {
+	ID             int   `json:"id"`
+	PermissionList []int `json:"permission_list"`
 }
 
 // 初始化
@@ -41,7 +72,9 @@ func (m *Role) TableIndex() [][]string {
 
 // 多字段唯一键
 func (m *Role) TableUnique() [][]string {
-	return [][]string{}
+	return [][]string{
+		{"code"},
+	}
 }
 
 // 自定义引擎
@@ -62,8 +95,22 @@ func ReadRoleList(param ReadRoleListParam) (list []*Role, total int64, err error
 	list = make([]*Role, 0)
 	query := orm.NewOrm().QueryTable(RoleTBName())
 
+	if len(param.Name) > 0 {
+		query = query.Filter("name__icontains", param.Name)
+	}
+
+	if len(param.Code) > 0 {
+		query = query.Filter("code", param.Code)
+	}
+
+	if param.Status != ROLE_STATUS_IGNORE {
+		query = query.Filter("status", param.Status)
+	}
+
 	sortOrder := "id"
 	switch param.Sort {
+	case "seq":
+		sortOrder = "seq"
 	}
 	if param.Order == "desc" {
 		sortOrder = "-" + sortOrder
@@ -100,7 +147,7 @@ func ReadRoleListRaw(param ReadRoleListParam) (list []*Role, total int64, err er
 	}
 
 	// 查询字段
-	var fields = "T0.`id`, T0.`name`, T0.`seq`, T0.`memo`"
+	var fields = "T0.`id`, T0.`name`, T0.`code`, T0.`seq`, T0.`status`, T0.`create_time`, T0.`update_time`, T0.`memo`"
 
 	// 关联查询
 	var relatedSql string
@@ -148,7 +195,7 @@ func InsertRoleMulti(list []Role) (num int64, err error) {
 func UpdateRoleOne(m Role, fields ...string) (num int64, err error) {
 	o := orm.NewOrm()
 	if len(fields) == 0 {
-		fields = []string{"name", "seq", "memo"}
+		fields = []string{"name", "code", "seq", "status", "create_time", "update_time", "memo"}
 	}
 	num, err = o.Update(&m, fields...)
 	return
@@ -172,5 +219,39 @@ func DeleteRoleOne(id int) (num int64, err error) {
 func DeleteRoleMulti(ids []int) (num int64, err error) {
 	o := orm.NewOrm()
 	num, err = o.QueryTable(RoleTBName()).Filter("id__in", ids).Delete()
+	return
+}
+
+// 更新角色权限
+func UpdateRolePermissionMulti(param UpdateRolePermissionParam) (err error) {
+	var list = make([]*RolePermissionRel, len(param.PermissionList))
+	for k, v := range param.PermissionList {
+		list[k] = &RolePermissionRel{
+			RoleID:       param.ID,
+			PermissionID: v,
+		}
+	}
+
+	o := orm.NewOrm()
+	err = o.Begin()
+	if err != nil {
+		return
+	}
+
+	// 删除旧关系
+	_, err = o.Raw("DELETE FROM role_permission_rel WHERE role_id = ?", param.ID).Exec()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 添加新关系
+	_, err = o.InsertMulti(100, list)
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	err = o.Commit()
 	return
 }

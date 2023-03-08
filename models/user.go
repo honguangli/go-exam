@@ -7,20 +7,58 @@ import (
 
 // 用户表
 type User struct {
-	ID       int    `orm:"column(id)" form:"id" json:"id"`
-	Name     string `orm:"column(name)" form:"name" json:"name"`
-	Password string `orm:"column(password)" form:"password" json:"password"`
-	TrueName string `orm:"column(true_name)" form:"true_name" json:"true_name"`
-	Mobile   string `orm:"column(mobile)" form:"mobile" json:"mobile"`
-	Email    string `orm:"column(email)" form:"email" json:"email"`
-	Status   int    `orm:"column(status)" form:"status" json:"status"`
-	Memo     string `orm:"column(memo)" form:"memo" json:"memo"`
+	ID         int    `orm:"column(id)" form:"id" json:"id"`
+	Name       string `orm:"column(name)" form:"name" json:"name"`
+	Password   string `orm:"column(password)" form:"password" json:"password"`
+	Type       int    `orm:"column(type)" form:"type" json:"type"`
+	TrueName   string `orm:"column(true_name)" form:"true_name" json:"true_name"`
+	Mobile     string `orm:"column(mobile)" form:"mobile" json:"mobile"`
+	Email      string `orm:"column(email)" form:"email" json:"email"`
+	Status     int    `orm:"column(status)" form:"status" json:"status"`
+	CreateTime int64  `orm:"column(create_time)" form:"create_time" json:"create_time"`
+	UpdateTime int64  `orm:"column(update_time)" form:"update_time" json:"update_time"`
+	Memo       string `orm:"column(memo)" form:"memo" json:"memo"`
+}
+
+// 类型
+const (
+	USER_TYPE_IGNORE = -1 // 忽略类型
+	USER_ADMIN       = 1  // 管理员
+	USER_TEACHER     = 2  // 教师
+	USER_STUDENT     = 3  // 学生
+)
+
+// 状态
+const (
+	USER_STATUS_IGNORE = -1 // 忽略状态
+	USER_DISABLE       = 0  // 禁用
+	USER_ENABLE        = 1  // 正常
+)
+
+// 查询详情参数
+type ReadUserDetailParam struct {
+	ID int `json:"id"`
 }
 
 // 查询列表参数
 type ReadUserListParam struct {
 	BaseQueryParam
-	ClosePage bool `form:"close_page" json:"close_page"`
+	Name      string `json:"name"`
+	Type      int    `json:"type"`
+	Status    int    `json:"status"`
+	ClosePage bool   `form:"close_page" json:"close_page"`
+}
+
+// 删除参数
+type DeleteUserDetailParam struct {
+	ID   int   `json:"id"`
+	List []int `json:"list"`
+}
+
+// 更新用户角色参数
+type UpdateUserRoleParam struct {
+	ID       int   `json:"id"`
+	RoleList []int `json:"role_list"`
 }
 
 // 初始化
@@ -68,6 +106,18 @@ func ReadUserList(param ReadUserListParam) (list []*User, total int64, err error
 	list = make([]*User, 0)
 	query := orm.NewOrm().QueryTable(UserTBName())
 
+	if len(param.Name) > 0 {
+		query = query.Filter("name__icontains", param.Name)
+	}
+
+	if param.Type != USER_TYPE_IGNORE {
+		query = query.Filter("type", param.Type)
+	}
+
+	if param.Status != USER_STATUS_IGNORE {
+		query = query.Filter("status", param.Status)
+	}
+
 	sortOrder := "id"
 	switch param.Sort {
 	}
@@ -106,7 +156,7 @@ func ReadUserListRaw(param ReadUserListParam) (list []*User, total int64, err er
 	}
 
 	// 查询字段
-	var fields = "T0.`id`, T0.`name`, T0.`password`, T0.`true_name`, T0.`mobile`, T0.`email`, T0.`status`, T0.`memo`"
+	var fields = "T0.`id`, T0.`name`, T0.`password`, T0.`type`, T0.`true_name`, T0.`mobile`, T0.`email`, T0.`status`, T0.`create_time`, T0.`update_time`, T0.`memo`"
 
 	// 关联查询
 	var relatedSql string
@@ -154,7 +204,7 @@ func InsertUserMulti(list []User) (num int64, err error) {
 func UpdateUserOne(m User, fields ...string) (num int64, err error) {
 	o := orm.NewOrm()
 	if len(fields) == 0 {
-		fields = []string{"name", "password", "true_name", "mobile", "email", "status", "memo"}
+		fields = []string{"name", "password", "type", "true_name", "mobile", "email", "status", "create_time", "update_time", "memo"}
 	}
 	num, err = o.Update(&m, fields...)
 	return
@@ -178,5 +228,39 @@ func DeleteUserOne(id int) (num int64, err error) {
 func DeleteUserMulti(ids []int) (num int64, err error) {
 	o := orm.NewOrm()
 	num, err = o.QueryTable(UserTBName()).Filter("id__in", ids).Delete()
+	return
+}
+
+// 更新用户角色
+func UpdateUserRoleMulti(param UpdateUserRoleParam) (err error) {
+	var list = make([]*UserRoleRel, len(param.RoleList))
+	for k, v := range param.RoleList {
+		list[k] = &UserRoleRel{
+			UserID: param.ID,
+			RoleID: v,
+		}
+	}
+
+	o := orm.NewOrm()
+	err = o.Begin()
+	if err != nil {
+		return
+	}
+
+	// 删除旧关系
+	_, err = o.Raw("DELETE FROM user_role_rel WHERE user_id = ?", param.ID).Exec()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 添加新关系
+	_, err = o.InsertMulti(100, list)
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	err = o.Commit()
 	return
 }

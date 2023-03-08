@@ -7,19 +7,97 @@ import (
 
 // 权限表
 type Permission struct {
-	ID   int    `orm:"column(id)" form:"id" json:"id"`
-	Name string `orm:"column(name)" form:"name" json:"name"`
-	Type int    `orm:"column(type)" form:"type" json:"type"`
-	Pid  int    `orm:"column(pid)" form:"pid" json:"pid"`
-	Icon string `orm:"column(icon)" form:"icon" json:"icon"`
-	Path string `orm:"column(path)" form:"path" json:"path"`
-	Memo string `orm:"column(memo)" form:"memo" json:"memo"`
+	ID               int    `orm:"column(id)" form:"id" json:"id"`
+	Type             int    `orm:"column(type)" form:"type" json:"type"`
+	Pid              int    `orm:"column(pid)" form:"pid" json:"pid"`
+	Status           int    `orm:"column(status)" form:"status" json:"status"`
+	Path             string `orm:"column(path)" form:"path" json:"path"`
+	Name             string `orm:"column(name)" form:"name" json:"name"`
+	Component        string `orm:"column(component)" form:"component" json:"component"`
+	Redirect         string `orm:"column(redirect)" form:"redirect" json:"redirect"`
+	MetaTitle        string `orm:"column(meta_title)" form:"meta_title" json:"meta_title"`
+	MetaIcon         string `orm:"column(meta_icon)" form:"meta_icon" json:"meta_icon"`
+	MetaExtraIcon    string `orm:"column(meta_extra_icon)" form:"meta_extra_icon" json:"meta_extra_icon"`
+	MetaShowLink     int8   `orm:"column(meta_show_link)" form:"meta_show_link" json:"meta_show_link"`
+	MetaShowParent   int8   `orm:"column(meta_show_parent)" form:"meta_show_parent" json:"meta_show_parent"`
+	MetaKeepAlive    int8   `orm:"column(meta_keep_alive)" form:"meta_keep_alive" json:"meta_keep_alive"`
+	MetaFrameSrc     string `orm:"column(meta_frame_src)" form:"meta_frame_src" json:"meta_frame_src"`
+	MetaFrameLoading int8   `orm:"column(meta_frame_loading)" form:"meta_frame_loading" json:"meta_frame_loading"`
+	MetaHiddenTag    int8   `orm:"column(meta_hidden_tag)" form:"meta_hidden_tag" json:"meta_hidden_tag"`
+	MetaRank         int    `orm:"column(meta_rank)" form:"meta_rank" json:"meta_rank"`
+	CreateTime       int64  `orm:"column(create_time)" form:"create_time" json:"create_time"`
+	UpdateTime       int64  `orm:"column(update_time)" form:"update_time" json:"update_time"`
+	Memo             string `orm:"column(memo)" form:"memo" json:"memo"`
+}
+
+// 类型
+const (
+	PERMISSION_TYPE_IGNORE = -1 // 忽略类型
+	PERMISSION_MENU        = 1  // 菜单权限
+	PERMISSION_PAGE        = 2  // 页面权限
+	PERMISSION_COMPONENT   = 3  // 组件权限
+	PERMISSION_OP          = 4  // 操作权限
+	PERMISSION_BUTTON      = 5  // 按钮权限
+	PERMISSION_DATA        = 6  // 数据权限
+)
+
+// 状态
+const (
+	PERMISSION_STATUS_IGNORE = -1 // 忽略状态
+	PERMISSION_DISABLE       = 0  // 禁用
+	PERMISSION_ENABLE        = 1  // 正常
+)
+
+// 是否显示
+const (
+	PERMISSION_META_SHOW_LINE_DISABLE = 0 // 隐藏
+	PERMISSION_META_SHOW_LINE_ENABLE  = 1 // 显示
+)
+
+// 是否显示父级菜单
+const (
+	PERMISSION_META_SHOW_PARENT_DISABLE = 0 // 隐藏
+	PERMISSION_META_SHOW_PARENT_ENABLE  = 1 // 显示
+)
+
+// 是否缓存
+const (
+	PERMISSION_META_KEEP_ALIVE_DISABLE = 0 // 关闭
+	PERMISSION_META_KEEP_ALIVE_ENABLE  = 1 // 开启
+)
+
+// 是否开启iframe首次加载动画
+const (
+	PERMISSION_META_IFRAME_LOADING_DISABLE = 0 // 关闭
+	PERMISSION_META_IFRAME_LOADING_ENABLE  = 1 // 开启
+)
+
+// 是否不添加信息到标签页
+const (
+	PERMISSION_META_HIDDEN_TAG_DISABLE = 0 // 添加
+	PERMISSION_META_HIDDEN_TAG_ENABLE  = 1 // 不添加
+)
+
+// 查询详情参数
+type ReadPermissionDetailParam struct {
+	ID int `json:"id"`
 }
 
 // 查询列表参数
 type ReadPermissionListParam struct {
 	BaseQueryParam
-	ClosePage bool `form:"close_page" json:"close_page"`
+	Type      int    `json:"type"`
+	Status    int    `json:"status"`
+	Path      string `json:"path"`
+	Name      string `json:"name"`
+	MetaTitle string `json:"meta_title"`
+	ClosePage bool   `form:"close_page" json:"close_page"`
+}
+
+// 删除参数
+type DeletePermissionDetailParam struct {
+	ID   int   `json:"id"`
+	List []int `json:"list"`
 }
 
 // 初始化
@@ -44,7 +122,9 @@ func (m *Permission) TableIndex() [][]string {
 
 // 多字段唯一键
 func (m *Permission) TableUnique() [][]string {
-	return [][]string{}
+	return [][]string{
+		{"name"},
+	}
 }
 
 // 自定义引擎
@@ -64,6 +144,26 @@ func ReadPermissionOne(id int) (m Permission, err error) {
 func ReadPermissionList(param ReadPermissionListParam) (list []*Permission, total int64, err error) {
 	list = make([]*Permission, 0)
 	query := orm.NewOrm().QueryTable(PermissionTBName())
+
+	if param.Type != PERMISSION_TYPE_IGNORE {
+		query = query.Filter("type", param.Type)
+	}
+
+	if param.Status != PERMISSION_STATUS_IGNORE {
+		query = query.Filter("status", param.Status)
+	}
+
+	if len(param.Path) > 0 {
+		query = query.Filter("path__icontains", param.Path)
+	}
+
+	if len(param.Name) > 0 {
+		query = query.Filter("name__icontains", param.Name)
+	}
+
+	if len(param.MetaTitle) > 0 {
+		query = query.Filter("meta_title__icontains", param.MetaTitle)
+	}
 
 	sortOrder := "id"
 	switch param.Sort {
@@ -103,7 +203,7 @@ func ReadPermissionListRaw(param ReadPermissionListParam) (list []*Permission, t
 	}
 
 	// 查询字段
-	var fields = "T0.`id`, T0.`name`, T0.`type`, T0.`pid`, T0.`icon`, T0.`path`, T0.`memo`"
+	var fields = "T0.`id`, T0.`type`, T0.`pid`, T0.`status`, T0.`path`, T0.`name`, T0.`component`, T0.`redirect`, T0.`meta_title`, T0.`meta_icon`, T0.`meta_extra_icon`, T0.`meta_show_link`, T0.`meta_show_parent`, T0.`meta_keep_alive`, T0.`meta_frame_src`, T0.`meta_frame_loading`, T0.`meta_hidden_tag`, T0.`meta_rank`, T0.`create_time`, T0.`update_time`, T0.`memo`"
 
 	// 关联查询
 	var relatedSql string
@@ -151,7 +251,7 @@ func InsertPermissionMulti(list []Permission) (num int64, err error) {
 func UpdatePermissionOne(m Permission, fields ...string) (num int64, err error) {
 	o := orm.NewOrm()
 	if len(fields) == 0 {
-		fields = []string{"name", "type", "pid", "icon", "path", "memo"}
+		fields = []string{"type", "pid", "status", "path", "name", "component", "redirect", "meta_title", "meta_icon", "meta_extra_icon", "meta_show_link", "meta_show_parent", "meta_keep_alive", "meta_frame_src", "meta_frame_loading", "meta_hidden_tag", "meta_rank", "create_time", "update_time", "memo"}
 	}
 	num, err = o.Update(&m, fields...)
 	return
