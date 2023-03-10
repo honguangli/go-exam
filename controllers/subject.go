@@ -70,7 +70,7 @@ func (c *SubjectController) Create() {
 	id, err := models.InsertSubjectOne(m)
 	if err != nil {
 		logs.Info("c[subject][create]: 创建失败, err = %s", err.Error())
-		c.Failure("获取数据失败")
+		c.Failure("操作失败")
 	}
 
 	var res = make(map[string]interface{})
@@ -92,7 +92,7 @@ func (c *SubjectController) Update() {
 	_, err = models.UpdateSubjectOne(m, "name", "desc")
 	if err != nil {
 		logs.Info("c[subject][update]: 更新失败, err = %s", err.Error())
-		c.Failure("获取数据失败")
+		c.Failure("操作失败")
 	}
 
 	c.Success(nil)
@@ -100,7 +100,7 @@ func (c *SubjectController) Update() {
 
 // 删除
 func (c *SubjectController) Delete() {
-	var param models.DeleteSubjectDetailParam
+	var param models.DeleteSubjectParam
 	var err error
 	if err = c.ParseParam(&param); err != nil {
 		logs.Info("c[subject][delete]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
@@ -123,21 +123,21 @@ func (c *SubjectController) Delete() {
 		num, err = models.DeleteSubjectOne(param.ID)
 		if err != nil {
 			logs.Info("c[subject][delete]: 删除失败, err = %s", err.Error())
-			c.Failure("获取数据失败")
+			c.Failure("操作失败")
 		}
 	} else if len(param.List) == 1 {
 		// 删除
 		num, err = models.DeleteSubjectOne(param.List[0])
 		if err != nil {
 			logs.Info("c[subject][delete]: 删除失败, err = %s", err.Error())
-			c.Failure("获取数据失败")
+			c.Failure("操作失败")
 		}
 	} else {
 		// 批量删除
 		num, err = models.DeleteSubjectMulti(param.List)
 		if err != nil {
 			logs.Info("c[subject][delete]: 批量删除失败, err = %s", err.Error())
-			c.Failure("获取数据失败")
+			c.Failure("操作失败")
 		}
 	}
 

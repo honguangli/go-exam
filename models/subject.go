@@ -25,7 +25,7 @@ type ReadSubjectListParam struct {
 }
 
 // 删除参数
-type DeleteSubjectDetailParam struct {
+type DeleteSubjectParam struct {
 	ID   int   `json:"id"`
 	List []int `json:"list"`
 }

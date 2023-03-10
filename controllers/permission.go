@@ -39,6 +39,30 @@ func (c *PermissionController) List() {
 	c.Success(res)
 }
 
+// 查询列表
+func (c *PermissionController) All() {
+	var param models.ReadPermissionListParam
+	var err error
+	if err = c.ParseParam(&param); err != nil {
+		logs.Info("c[permission][list]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+
+	// 查询列表
+	param.ClosePage = true
+	list, total, err := models.ReadPermissionListRaw(param)
+	if err != nil {
+		logs.Info("c[permission][list]: 查询列表失败, err = %s", err.Error())
+		c.Failure("获取数据失败")
+	}
+
+	var res = make(map[string]interface{})
+	res["list"] = list
+	res["total"] = total
+
+	c.Success(res)
+}
+
 // 查询详情
 func (c *PermissionController) Detail() {
 	var param models.ReadPermissionDetailParam
@@ -72,7 +96,7 @@ func (c *PermissionController) Create() {
 	id, err := models.InsertPermissionOne(m)
 	if err != nil {
 		logs.Info("c[permission][create]: 创建失败, err = %s", err.Error())
-		c.Failure("获取数据失败")
+		c.Failure("操作失败")
 	}
 
 	var res = make(map[string]interface{})
@@ -91,10 +115,11 @@ func (c *PermissionController) Update() {
 	}
 
 	// 更新
-	_, err = models.UpdatePermissionOne(m, "type", "pid", "status", "path", "name", "component", "redirect", "meta_title", "meta_icon", "meta_extra_icon", "meta_show_link", "meta_show_parent", "meta_keep_alive", "meta_frame_src", "meta_frame_loading", "meta_hidden_tag", "meta_rank", "update_time", "memo")
+	m.UpdateTime = time.Now().Unix()
+	_, err = models.UpdatePermissionOne(m, "type", "pid", "code", "status", "path", "name", "component", "redirect", "meta_title", "meta_icon", "meta_extra_icon", "meta_show_link", "meta_show_parent", "meta_keep_alive", "meta_frame_src", "meta_frame_loading", "meta_hidden_tag", "meta_rank", "update_time", "memo")
 	if err != nil {
 		logs.Info("c[permission][update]: 更新失败, err = %s", err.Error())
-		c.Failure("获取数据失败")
+		c.Failure("操作失败")
 	}
 
 	c.Success(nil)
@@ -102,7 +127,7 @@ func (c *PermissionController) Update() {
 
 // 删除
 func (c *PermissionController) Delete() {
-	var param models.DeletePermissionDetailParam
+	var param models.DeletePermissionParam
 	var err error
 	if err = c.ParseParam(&param); err != nil {
 		logs.Info("c[permission][delete]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
@@ -122,24 +147,17 @@ func (c *PermissionController) Delete() {
 	var num int64
 	if param.ID > 0 {
 		// 删除
-		num, err = models.DeletePermissionOne(param.ID)
+		num, err = models.DeletePermissionMultiWithChildren([]int{param.ID})
 		if err != nil {
 			logs.Info("c[permission][delete]: 删除失败, err = %s", err.Error())
-			c.Failure("获取数据失败")
-		}
-	} else if len(param.List) == 1 {
-		// 删除
-		num, err = models.DeletePermissionOne(param.List[0])
-		if err != nil {
-			logs.Info("c[permission][delete]: 删除失败, err = %s", err.Error())
-			c.Failure("获取数据失败")
+			c.Failure("操作失败")
 		}
 	} else {
 		// 批量删除
-		num, err = models.DeletePermissionMulti(param.List)
+		num, err = models.DeletePermissionMultiWithChildren(param.List)
 		if err != nil {
 			logs.Info("c[permission][delete]: 批量删除失败, err = %s", err.Error())
-			c.Failure("获取数据失败")
+			c.Failure("操作失败")
 		}
 	}
 

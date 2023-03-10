@@ -31,18 +31,19 @@ func init() {
 				beego.NSRouter("/update", &controllers.KnowledgeController{}, "Post:Update"),
 				beego.NSRouter("/delete", &controllers.KnowledgeController{}, "Post:Delete"),
 			),
-
 			// 试题
 			beego.NSNamespace("/question",
 				beego.NSRouter("/list", &controllers.QuestionController{}, "Post:List"),
+				beego.NSRouter("/detail", &controllers.QuestionController{}, "Post:Detail"),
+				beego.NSRouter("/create", &controllers.QuestionController{}, "Post:Create"),
+				beego.NSRouter("/update", &controllers.QuestionController{}, "Post:Update"),
+				beego.NSRouter("/delete", &controllers.QuestionController{}, "Post:Delete"),
 			),
-
-			// 权限
-			//beego.NSRouter("/getAsyncRoutes", &controllers.UserController{}, "Post:GetAsyncRoutes"),
 
 			// 权限
 			beego.NSNamespace("/permission",
 				beego.NSRouter("/list", &controllers.PermissionController{}, "Post:List"),
+				beego.NSRouter("/all", &controllers.PermissionController{}, "Post:All"),
 				beego.NSRouter("/detail", &controllers.PermissionController{}, "Post:Detail"),
 				beego.NSRouter("/create", &controllers.PermissionController{}, "Post:Create"),
 				beego.NSRouter("/update", &controllers.PermissionController{}, "Post:Update"),
@@ -51,11 +52,13 @@ func init() {
 			// 角色
 			beego.NSNamespace("/role",
 				beego.NSRouter("/list", &controllers.RoleController{}, "Post:List"),
+				beego.NSRouter("/all", &controllers.RoleController{}, "Post:All"),
 				beego.NSRouter("/detail", &controllers.RoleController{}, "Post:Detail"),
 				beego.NSRouter("/create", &controllers.RoleController{}, "Post:Create"),
 				beego.NSRouter("/update", &controllers.RoleController{}, "Post:Update"),
-				beego.NSRouter("/permission", &controllers.RoleController{}, "Post:UpdatePermission"),
 				beego.NSRouter("/delete", &controllers.RoleController{}, "Post:Delete"),
+				beego.NSRouter("/permission/list", &controllers.RoleController{}, "Post:PermissionList"),
+				beego.NSRouter("/permission/auth", &controllers.RoleController{}, "Post:AuthPermission"),
 			),
 			// 用户
 			beego.NSNamespace("/user",
@@ -63,8 +66,11 @@ func init() {
 				beego.NSRouter("/detail", &controllers.UserController{}, "Post:Detail"),
 				beego.NSRouter("/create", &controllers.UserController{}, "Post:Create"),
 				beego.NSRouter("/update", &controllers.UserController{}, "Post:Update"),
-				beego.NSRouter("/role", &controllers.UserController{}, "Post:UpdateRole"),
 				beego.NSRouter("/delete", &controllers.UserController{}, "Post:Delete"),
+				beego.NSRouter("/update_type", &controllers.UserController{}, "Post:UpdateType"),
+				beego.NSRouter("/update_password", &controllers.UserController{}, "Post:UpdatePassword"),
+				beego.NSRouter("/role/list", &controllers.UserController{}, "Post:RoleList"),
+				beego.NSRouter("/role/auth", &controllers.UserController{}, "Post:AuthRole"),
 			),
 			// 班级
 			beego.NSNamespace("/class",

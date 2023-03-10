@@ -15,6 +15,10 @@ type BaseQueryParam struct {
 	Limit  int    `form:"limit" json:"limit"`
 }
 
+type OrmID struct {
+	ID int `orm:"column(id)"`
+}
+
 type RawCount struct {
 	Count int64 `json:"count"`
 }

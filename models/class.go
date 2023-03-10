@@ -34,7 +34,7 @@ type ReadClassListParam struct {
 }
 
 // 删除参数
-type DeleteClassDetailParam struct {
+type DeleteClassParam struct {
 	ID   int   `json:"id"`
 	List []int `json:"list"`
 }

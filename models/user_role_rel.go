@@ -15,6 +15,7 @@ type UserRoleRel struct {
 // 查询列表参数
 type ReadUserRoleRelListParam struct {
 	BaseQueryParam
+	UserID    int  `json:"user_id"`
 	ClosePage bool `form:"close_page" json:"close_page"`
 }
 
@@ -83,6 +84,11 @@ func ReadUserRoleRelListRaw(param ReadUserRoleRelListParam) (list []*UserRoleRel
 	list = make([]*UserRoleRel, 0)
 	var args = make([]interface{}, 0)
 	var whereSql = "WHERE 1=1"
+
+	if param.UserID > 0 {
+		whereSql += " AND T0.user_id = ?"
+		args = append(args, param.UserID)
+	}
 
 	// 排序
 	var orderSql = "ORDER BY "

@@ -89,10 +89,10 @@ func (c *ClassController) Update() {
 	}
 
 	// 更新
-	_, err = models.UpdateClassOne(m, "name", "desc")
+	_, err = models.UpdateClassOne(m, "name", "status", "desc")
 	if err != nil {
 		logs.Info("c[Class][Update]: 更新失败, err = %s", err.Error())
-		c.Failure("获取数据失败")
+		c.Failure("操作失败")
 	}
 
 	c.Success(nil)
@@ -111,7 +111,7 @@ func (c *ClassController) UpdateUser() {
 	err = models.UpdateClassUserMulti(param)
 	if err != nil {
 		logs.Info("c[Class][UpdateRole]: 更新失败, err = %s", err.Error())
-		c.Failure("获取数据失败")
+		c.Failure("操作失败")
 	}
 
 	c.Success(nil)
@@ -119,7 +119,7 @@ func (c *ClassController) UpdateUser() {
 
 // 删除
 func (c *ClassController) Delete() {
-	var param models.DeleteClassDetailParam
+	var param models.DeleteClassParam
 	var err error
 	if err = c.ParseParam(&param); err != nil {
 		logs.Info("c[Class][Delete]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
@@ -142,21 +142,21 @@ func (c *ClassController) Delete() {
 		num, err = models.DeleteClassOne(param.ID)
 		if err != nil {
 			logs.Info("c[Class][Delete]: 删除失败, err = %s", err.Error())
-			c.Failure("获取数据失败")
+			c.Failure("操作失败")
 		}
 	} else if len(param.List) == 1 {
 		// 删除
 		num, err = models.DeleteClassOne(param.List[0])
 		if err != nil {
 			logs.Info("c[Class][Delete]: 删除失败, err = %s", err.Error())
-			c.Failure("获取数据失败")
+			c.Failure("操作失败")
 		}
 	} else {
 		// 批量删除
 		num, err = models.DeleteClassMulti(param.List)
 		if err != nil {
 			logs.Info("c[Class][Delete]: 批量删除失败, err = %s", err.Error())
-			c.Failure("获取数据失败")
+			c.Failure("操作失败")
 		}
 	}
 

@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/astaxie/beego/logs"
 	"go-exam/models"
+	"go-exam/utils"
 	"time"
 )
 
@@ -29,6 +30,32 @@ func (c *RoleController) List() {
 	list, total, err := models.ReadRoleList(param)
 	if err != nil {
 		logs.Info("c[Role][List]: 查询列表失败, err = %s", err.Error())
+		c.Failure("获取数据失败")
+	}
+
+	var res = make(map[string]interface{})
+	res["list"] = list
+	res["total"] = total
+
+	c.Success(res)
+}
+
+// 查询列表
+func (c *RoleController) All() {
+	var param models.ReadRoleListParam
+	var err error
+	if err = c.ParseParam(&param); err != nil {
+		logs.Info("c[Role][All]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+
+	// 查询列表
+	param.ClosePage = true
+	param.Sort = "seq"
+	param.Order = "asc"
+	list, total, err := models.ReadRoleListRaw(param)
+	if err != nil {
+		logs.Info("c[Role][All]: 查询列表失败, err = %s", err.Error())
 		c.Failure("获取数据失败")
 	}
 
@@ -70,9 +97,12 @@ func (c *RoleController) Create() {
 	// 创建
 	m.CreateTime = time.Now().Unix()
 	id, err := models.InsertRoleOne(m)
+	if utils.IsUniqueConstraintError(err) {
+		c.Failure("角色代码已被占用")
+	}
 	if err != nil {
 		logs.Info("c[Role][Create]: 创建失败, err = %s", err.Error())
-		c.Failure("获取数据失败")
+		c.Failure("操作失败")
 	}
 
 	var res = make(map[string]interface{})
@@ -91,29 +121,14 @@ func (c *RoleController) Update() {
 	}
 
 	// 更新
+	m.UpdateTime = time.Now().Unix()
 	_, err = models.UpdateRoleOne(m, "name", "code", "seq", "status", "update_time", "memo")
+	if utils.IsUniqueConstraintError(err) {
+		c.Failure("角色代码已被占用")
+	}
 	if err != nil {
 		logs.Info("c[Role][Update]: 更新失败, err = %s", err.Error())
-		c.Failure("获取数据失败")
-	}
-
-	c.Success(nil)
-}
-
-// 更新权限
-func (c *RoleController) UpdatePermission() {
-	var param models.UpdateRolePermissionParam
-	var err error
-	if err = c.ParseParam(&param); err != nil {
-		logs.Info("c[Role][UpdatePermission]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
-		c.Failure("参数错误")
-	}
-
-	// 更新
-	err = models.UpdateRolePermissionMulti(param)
-	if err != nil {
-		logs.Info("c[Role][UpdatePermission]: 更新失败, err = %s", err.Error())
-		c.Failure("获取数据失败")
+		c.Failure("操作失败")
 	}
 
 	c.Success(nil)
@@ -121,7 +136,7 @@ func (c *RoleController) UpdatePermission() {
 
 // 删除
 func (c *RoleController) Delete() {
-	var param models.DeleteRoleDetailParam
+	var param models.DeleteRoleParam
 	var err error
 	if err = c.ParseParam(&param); err != nil {
 		logs.Info("c[Role][Delete]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
@@ -141,24 +156,24 @@ func (c *RoleController) Delete() {
 	var num int64
 	if param.ID > 0 {
 		// 删除
-		num, err = models.DeleteRoleOne(param.ID)
+		num, err = models.DeleteRoleOneWithRel(param.ID)
 		if err != nil {
 			logs.Info("c[Role][Delete]: 删除失败, err = %s", err.Error())
-			c.Failure("获取数据失败")
+			c.Failure("操作失败")
 		}
 	} else if len(param.List) == 1 {
 		// 删除
-		num, err = models.DeleteRoleOne(param.List[0])
+		num, err = models.DeleteRoleOneWithRel(param.List[0])
 		if err != nil {
 			logs.Info("c[Role][Delete]: 删除失败, err = %s", err.Error())
-			c.Failure("获取数据失败")
+			c.Failure("操作失败")
 		}
 	} else {
 		// 批量删除
-		num, err = models.DeleteRoleMulti(param.List)
+		num, err = models.DeleteRoleMultiWithRel(param.List)
 		if err != nil {
 			logs.Info("c[Role][Delete]: 批量删除失败, err = %s", err.Error())
-			c.Failure("获取数据失败")
+			c.Failure("操作失败")
 		}
 	}
 
@@ -166,4 +181,51 @@ func (c *RoleController) Delete() {
 	res["num"] = num
 
 	c.Success(res)
+}
+
+// 查询授权列表
+func (c *RoleController) PermissionList() {
+	var param models.ReadRolePermissionRelListParam
+	var err error
+	if err = c.ParseParam(&param); err != nil {
+		logs.Info("c[Role][PermissionList]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+	if param.RoleID <= 0 {
+		logs.Info("c[Role][PermissionList]: 参数错误, 角色id不能为空, req = %s", c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+
+	// 查询列表
+	param.ClosePage = true
+	list, total, err := models.ReadRolePermissionRelListRaw(param)
+	if err != nil {
+		logs.Info("c[Role][PermissionList]: 查询列表失败, err = %s", err.Error())
+		c.Failure("获取数据失败")
+	}
+
+	var res = make(map[string]interface{})
+	res["list"] = list
+	res["total"] = total
+
+	c.Success(res)
+}
+
+// 授权
+func (c *RoleController) AuthPermission() {
+	var param models.UpdateRolePermissionParam
+	var err error
+	if err = c.ParseParam(&param); err != nil {
+		logs.Info("c[Role][AuthPermission]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+
+	// 更新
+	err = models.UpdateRolePermissionMulti(param)
+	if err != nil {
+		logs.Info("c[Role][AuthPermission]: 更新失败, err = %s", err.Error())
+		c.Failure("操作失败")
+	}
+
+	c.Success(nil)
 }

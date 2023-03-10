@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"github.com/astaxie/beego/orm"
+	"strings"
 )
 
 // 权限表
@@ -10,6 +11,7 @@ type Permission struct {
 	ID               int    `orm:"column(id)" form:"id" json:"id"`
 	Type             int    `orm:"column(type)" form:"type" json:"type"`
 	Pid              int    `orm:"column(pid)" form:"pid" json:"pid"`
+	Code             string `orm:"column(code)" form:"code" json:"code"`
 	Status           int    `orm:"column(status)" form:"status" json:"status"`
 	Path             string `orm:"column(path)" form:"path" json:"path"`
 	Name             string `orm:"column(name)" form:"name" json:"name"`
@@ -95,7 +97,7 @@ type ReadPermissionListParam struct {
 }
 
 // 删除参数
-type DeletePermissionDetailParam struct {
+type DeletePermissionParam struct {
 	ID   int   `json:"id"`
 	List []int `json:"list"`
 }
@@ -122,9 +124,7 @@ func (m *Permission) TableIndex() [][]string {
 
 // 多字段唯一键
 func (m *Permission) TableUnique() [][]string {
-	return [][]string{
-		{"name"},
-	}
+	return [][]string{}
 }
 
 // 自定义引擎
@@ -203,7 +203,7 @@ func ReadPermissionListRaw(param ReadPermissionListParam) (list []*Permission, t
 	}
 
 	// 查询字段
-	var fields = "T0.`id`, T0.`type`, T0.`pid`, T0.`status`, T0.`path`, T0.`name`, T0.`component`, T0.`redirect`, T0.`meta_title`, T0.`meta_icon`, T0.`meta_extra_icon`, T0.`meta_show_link`, T0.`meta_show_parent`, T0.`meta_keep_alive`, T0.`meta_frame_src`, T0.`meta_frame_loading`, T0.`meta_hidden_tag`, T0.`meta_rank`, T0.`create_time`, T0.`update_time`, T0.`memo`"
+	var fields = "T0.`id`, T0.`type`, T0.`pid`, T0.`code`, T0.`status`, T0.`path`, T0.`name`, T0.`component`, T0.`redirect`, T0.`meta_title`, T0.`meta_icon`, T0.`meta_extra_icon`, T0.`meta_show_link`, T0.`meta_show_parent`, T0.`meta_keep_alive`, T0.`meta_frame_src`, T0.`meta_frame_loading`, T0.`meta_hidden_tag`, T0.`meta_rank`, T0.`create_time`, T0.`update_time`, T0.`memo`"
 
 	// 关联查询
 	var relatedSql string
@@ -251,7 +251,7 @@ func InsertPermissionMulti(list []Permission) (num int64, err error) {
 func UpdatePermissionOne(m Permission, fields ...string) (num int64, err error) {
 	o := orm.NewOrm()
 	if len(fields) == 0 {
-		fields = []string{"type", "pid", "status", "path", "name", "component", "redirect", "meta_title", "meta_icon", "meta_extra_icon", "meta_show_link", "meta_show_parent", "meta_keep_alive", "meta_frame_src", "meta_frame_loading", "meta_hidden_tag", "meta_rank", "create_time", "update_time", "memo"}
+		fields = []string{"type", "pid", "code", "status", "path", "name", "component", "redirect", "meta_title", "meta_icon", "meta_extra_icon", "meta_show_link", "meta_show_parent", "meta_keep_alive", "meta_frame_src", "meta_frame_loading", "meta_hidden_tag", "meta_rank", "create_time", "update_time", "memo"}
 	}
 	num, err = o.Update(&m, fields...)
 	return
@@ -275,5 +275,52 @@ func DeletePermissionOne(id int) (num int64, err error) {
 func DeletePermissionMulti(ids []int) (num int64, err error) {
 	o := orm.NewOrm()
 	num, err = o.QueryTable(PermissionTBName()).Filter("id__in", ids).Delete()
+	return
+}
+
+// 删除多个对象
+func DeletePermissionMultiWithChildren(ids []int) (num int64, err error) {
+	o := orm.NewOrm()
+
+	err = o.Begin()
+	if err != nil {
+		return
+	}
+
+	// 待删除的权限
+	var idList = make([]int, 0)
+	idList = append(idList, ids...)
+	var leftPointer int
+	for {
+		var result = make([]OrmID, 0)
+		_, err = o.Raw(fmt.Sprintf("SELECT id FROM permission WHERE pid IN (?%s)", strings.Repeat(", ?", len(idList)-leftPointer-1)), idList[leftPointer:]).QueryRows(&result)
+		if err != nil {
+			o.Rollback()
+			return
+		}
+		if len(result) == 0 {
+			break
+		}
+		leftPointer = len(idList)
+		for _, v := range result {
+			idList = append(idList, v.ID)
+		}
+	}
+
+	// 删除角色权限
+	_, err = o.Raw(fmt.Sprintf("DELETE FROM role_permission_rel WHERE permission_id IN (?%s)", strings.Repeat(", ?", len(idList)-1)), idList).Exec()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 删除权限
+	_, err = o.Raw(fmt.Sprintf("DELETE FROM permission WHERE id IN (?%s)", strings.Repeat(", ?", len(idList)-1)), idList).Exec()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	err = o.Commit()
 	return
 }

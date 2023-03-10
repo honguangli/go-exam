@@ -35,6 +35,9 @@ const (
 	USER_ENABLE        = 1  // 正常
 )
 
+// 默认密码
+const DEFAULT_PASSWORD = "123456"
+
 // 查询详情参数
 type ReadUserDetailParam struct {
 	ID int `json:"id"`
@@ -50,7 +53,7 @@ type ReadUserListParam struct {
 }
 
 // 删除参数
-type DeleteUserDetailParam struct {
+type DeleteUserParam struct {
 	ID   int   `json:"id"`
 	List []int `json:"list"`
 }

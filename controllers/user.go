@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/astaxie/beego/logs"
 	"go-exam/models"
+	"go-exam/utils"
 	"time"
 )
 
@@ -70,9 +71,12 @@ func (c *UserController) Create() {
 	// 创建
 	m.CreateTime = time.Now().Unix()
 	id, err := models.InsertUserOne(m)
+	if utils.IsUniqueConstraintError(err) {
+		c.Failure("用户名已被占用")
+	}
 	if err != nil {
 		logs.Info("c[User][Create]: 创建失败, err = %s", err.Error())
-		c.Failure("获取数据失败")
+		c.Failure("操作失败")
 	}
 
 	var res = make(map[string]interface{})
@@ -91,30 +95,14 @@ func (c *UserController) Update() {
 	}
 
 	// 更新
-	// TODO 用户名、账号类型、密码等需要更精细化接口专门修改
-	_, err = models.UpdateUserOne(m, "name", "password", "type", "true_name", "mobile", "email", "status", "update_time", "memo")
+	m.UpdateTime = time.Now().Unix()
+	_, err = models.UpdateUserOne(m, "name", "true_name", "mobile", "email", "status", "update_time", "memo")
+	if utils.IsUniqueConstraintError(err) {
+		c.Failure("用户名已被占用")
+	}
 	if err != nil {
 		logs.Info("c[User][Update]: 更新失败, err = %s", err.Error())
-		c.Failure("获取数据失败")
-	}
-
-	c.Success(nil)
-}
-
-// 更新角色
-func (c *UserController) UpdateRole() {
-	var param models.UpdateUserRoleParam
-	var err error
-	if err = c.ParseParam(&param); err != nil {
-		logs.Info("c[User][UpdateRole]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
-		c.Failure("参数错误")
-	}
-
-	// 更新
-	err = models.UpdateUserRoleMulti(param)
-	if err != nil {
-		logs.Info("c[User][UpdateRole]: 更新失败, err = %s", err.Error())
-		c.Failure("获取数据失败")
+		c.Failure("操作失败")
 	}
 
 	c.Success(nil)
@@ -122,7 +110,7 @@ func (c *UserController) UpdateRole() {
 
 // 删除
 func (c *UserController) Delete() {
-	var param models.DeleteUserDetailParam
+	var param models.DeleteUserParam
 	var err error
 	if err = c.ParseParam(&param); err != nil {
 		logs.Info("c[User][Delete]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
@@ -145,21 +133,21 @@ func (c *UserController) Delete() {
 		num, err = models.DeleteUserOne(param.ID)
 		if err != nil {
 			logs.Info("c[User][Delete]: 删除失败, err = %s", err.Error())
-			c.Failure("获取数据失败")
+			c.Failure("操作失败")
 		}
 	} else if len(param.List) == 1 {
 		// 删除
 		num, err = models.DeleteUserOne(param.List[0])
 		if err != nil {
 			logs.Info("c[User][Delete]: 删除失败, err = %s", err.Error())
-			c.Failure("获取数据失败")
+			c.Failure("操作失败")
 		}
 	} else {
 		// 批量删除
 		num, err = models.DeleteUserMulti(param.List)
 		if err != nil {
 			logs.Info("c[User][Delete]: 批量删除失败, err = %s", err.Error())
-			c.Failure("获取数据失败")
+			c.Failure("操作失败")
 		}
 	}
 
@@ -167,4 +155,91 @@ func (c *UserController) Delete() {
 	res["num"] = num
 
 	c.Success(res)
+}
+
+// 更新账号类型
+func (c *UserController) UpdateType() {
+	var m models.User
+	var err error
+	if err = c.ParseParam(&m); err != nil {
+		logs.Info("c[User][UpdateType]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+
+	// 更新
+	m.UpdateTime = time.Now().Unix()
+	_, err = models.UpdateUserOne(m, "type", "update_time", "memo")
+	if err != nil {
+		logs.Info("c[User][UpdateType]: 更新失败, err = %s", err.Error())
+		c.Failure("操作失败")
+	}
+
+	c.Success(nil)
+}
+
+// 更新密码
+func (c *UserController) UpdatePassword() {
+	var m models.User
+	var err error
+	if err = c.ParseParam(&m); err != nil {
+		logs.Info("c[User][UpdatePassword]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+
+	// 更新
+	m.UpdateTime = time.Now().Unix()
+	_, err = models.UpdateUserOne(m, "password", "update_time", "memo")
+	if err != nil {
+		logs.Info("c[User][UpdatePassword]: 更新失败, err = %s", err.Error())
+		c.Failure("操作失败")
+	}
+
+	c.Success(nil)
+}
+
+// 查询授权列表
+func (c *UserController) RoleList() {
+	var param models.ReadUserRoleRelListParam
+	var err error
+	if err = c.ParseParam(&param); err != nil {
+		logs.Info("c[User][RoleList]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+	if param.UserID <= 0 {
+		logs.Info("c[User][RoleList]: 参数错误, 用户id不能为空, req = %s", c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+
+	// 查询列表
+	param.ClosePage = true
+	list, total, err := models.ReadUserRoleRelListRaw(param)
+	if err != nil {
+		logs.Info("c[User][RoleList]: 查询列表失败, err = %s", err.Error())
+		c.Failure("获取数据失败")
+	}
+
+	var res = make(map[string]interface{})
+	res["list"] = list
+	res["total"] = total
+
+	c.Success(res)
+}
+
+// 更新角色
+func (c *UserController) AuthRole() {
+	var param models.UpdateUserRoleParam
+	var err error
+	if err = c.ParseParam(&param); err != nil {
+		logs.Info("c[User][AuthRole]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+
+	// 更新
+	err = models.UpdateUserRoleMulti(param)
+	if err != nil {
+		logs.Info("c[User][AuthRole]: 更新失败, err = %s", err.Error())
+		c.Failure("操作失败")
+	}
+
+	c.Success(nil)
 }

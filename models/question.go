@@ -18,8 +18,8 @@ type Question struct {
 	KnowledgeIds string `orm:"column(knowledge_ids)" form:"knowledge_ids" json:"knowledge_ids"`
 	Score        int    `orm:"column(score)" form:"score" json:"score"`
 	Status       int    `orm:"column(status)" form:"status" json:"status"`
-	CreateTime   int    `orm:"column(create_time)" form:"create_time" json:"create_time"`
-	UpdateTime   int    `orm:"column(update_time)" form:"update_time" json:"update_time"`
+	CreateTime   int64  `orm:"column(create_time)" form:"create_time" json:"create_time"`
+	UpdateTime   int64  `orm:"column(update_time)" form:"update_time" json:"update_time"`
 	Memo         string `orm:"column(memo)" form:"memo" json:"memo"`
 }
 
@@ -37,10 +37,32 @@ const (
 	QUESTION_FILE_MULTI           // 多项文件题
 )
 
+// 状态
+const (
+	QUESTION_STATUS_IGNORE = -1 // 忽略状态
+	QUESTION_DISABLE       = 0  // 禁用
+	QUESTION_ENABLE        = 1  // 正常
+)
+
+// 查询详情参数
+type ReadQuestionDetailParam struct {
+	ID int `json:"id"`
+}
+
 // 查询列表参数
 type ReadQuestionListParam struct {
 	BaseQueryParam
-	ClosePage bool `form:"close_page" json:"close_page"`
+	SubjectID int    `json:"subject_id"`
+	Name      string `json:"name"`
+	Type      int    `json:"type"`
+	Status    int    `json:"status"`
+	ClosePage bool   `form:"close_page" json:"close_page"`
+}
+
+// 删除参数
+type DeleteQuestionParam struct {
+	ID   int   `json:"id"`
+	List []int `json:"list"`
 }
 
 // 初始化
@@ -85,6 +107,22 @@ func ReadQuestionOne(id int) (m Question, err error) {
 func ReadQuestionList(param ReadQuestionListParam) (list []*Question, total int64, err error) {
 	list = make([]*Question, 0)
 	query := orm.NewOrm().QueryTable(QuestionTBName())
+
+	if param.SubjectID > 0 {
+		query = query.Filter("subject_id", param.SubjectID)
+	}
+
+	if len(param.Name) > 0 {
+		query = query.Filter("name__icontains", param.Name)
+	}
+
+	if param.Type != QUESTION_TYPE_IGNORE {
+		query = query.Filter("type", param.Type)
+	}
+
+	if param.Status != QUESTION_STATUS_IGNORE {
+		query = query.Filter("status", param.Status)
+	}
 
 	sortOrder := "id"
 	switch param.Sort {

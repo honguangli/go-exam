@@ -25,7 +25,7 @@ type ReadKnowledgeListParam struct {
 }
 
 // 删除参数
-type DeleteKnowledgeDetailParam struct {
+type DeleteKnowledgeParam struct {
 	ID   int   `json:"id"`
 	List []int `json:"list"`
 }

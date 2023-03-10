@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"github.com/astaxie/beego/orm"
+	"strings"
 )
 
 // 角色表
@@ -39,7 +40,7 @@ type ReadRoleListParam struct {
 }
 
 // 删除参数
-type DeleteRoleDetailParam struct {
+type DeleteRoleParam struct {
 	ID   int   `json:"id"`
 	List []int `json:"list"`
 }
@@ -133,6 +134,8 @@ func ReadRoleListRaw(param ReadRoleListParam) (list []*Role, total int64, err er
 	// 排序
 	var orderSql = "ORDER BY "
 	switch param.Sort {
+	case "seq":
+		orderSql += "T0.seq"
 	default:
 		orderSql += "T0.id"
 	}
@@ -247,6 +250,74 @@ func UpdateRolePermissionMulti(param UpdateRolePermissionParam) (err error) {
 
 	// 添加新关系
 	_, err = o.InsertMulti(100, list)
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	err = o.Commit()
+	return
+}
+
+// 删除多个对象
+func DeleteRoleOneWithRel(id int) (num int64, err error) {
+	o := orm.NewOrm()
+
+	err = o.Begin()
+	if err != nil {
+		return
+	}
+
+	// 删除角色权限
+	_, err = o.Raw("DELETE FROM role_permission_rel WHERE role_id = ?", id).Exec()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 删除用户角色
+	_, err = o.Raw("DELETE FROM user_role_rel WHERE role_id = ?", id).Exec()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 删除角色
+	_, err = o.Raw("DELETE FROM role WHERE id = ?", id).Exec()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	err = o.Commit()
+	return
+}
+
+// 删除多个对象
+func DeleteRoleMultiWithRel(ids []int) (num int64, err error) {
+	o := orm.NewOrm()
+
+	err = o.Begin()
+	if err != nil {
+		return
+	}
+
+	// 删除角色权限
+	_, err = o.Raw(fmt.Sprintf("DELETE FROM role_permission_rel WHERE role_id IN (?%s)", strings.Repeat(", ?", len(ids)-1)), ids).Exec()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 删除用户角色
+	_, err = o.Raw(fmt.Sprintf("DELETE FROM user_role_rel WHERE role_id IN (?%s)", strings.Repeat(", ?", len(ids)-1)), ids).Exec()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 删除角色
+	_, err = o.Raw(fmt.Sprintf("DELETE FROM role WHERE id IN (?%s)", strings.Repeat(", ?", len(ids)-1)), ids).Exec()
 	if err != nil {
 		o.Rollback()
 		return

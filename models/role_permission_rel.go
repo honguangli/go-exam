@@ -15,6 +15,7 @@ type RolePermissionRel struct {
 // 查询列表参数
 type ReadRolePermissionRelListParam struct {
 	BaseQueryParam
+	RoleID    int  `json:"role_id"`
 	ClosePage bool `form:"close_page" json:"close_page"`
 }
 
@@ -83,6 +84,11 @@ func ReadRolePermissionRelListRaw(param ReadRolePermissionRelListParam) (list []
 	list = make([]*RolePermissionRel, 0)
 	var args = make([]interface{}, 0)
 	var whereSql = "WHERE 1=1"
+
+	if param.RoleID > 0 {
+		whereSql += " AND T0.`role_id` = ?"
+		args = append(args, param.RoleID)
+	}
 
 	// 排序
 	var orderSql = "ORDER BY "
