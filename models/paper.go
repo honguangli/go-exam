@@ -13,13 +13,28 @@ type Paper struct {
 	PassScore  int    `orm:"column(pass_score)" form:"pass_score" json:"pass_score"`
 	Difficulty int    `orm:"column(difficulty)" form:"difficulty" json:"difficulty"`
 	Status     int    `orm:"column(status)" form:"status" json:"status"`
+	CreateTime int64  `orm:"column(create_time)" form:"create_time" json:"create_time"`
+	UpdateTime int64  `orm:"column(update_time)" form:"update_time" json:"update_time"`
 	Memo       string `orm:"column(memo)" form:"memo" json:"memo"`
+}
+
+// 查询详情参数
+type ReadPaperDetailParam struct {
+	ID int `json:"id"`
 }
 
 // 查询列表参数
 type ReadPaperListParam struct {
 	BaseQueryParam
-	ClosePage bool `form:"close_page" json:"close_page"`
+	Name      string `json:"name"`
+	Status    int    `json:"status"`
+	ClosePage bool   `form:"close_page" json:"close_page"`
+}
+
+// 删除参数
+type DeletePaperParam struct {
+	ID   int   `json:"id"`
+	List []int `json:"list"`
 }
 
 // 初始化
@@ -103,7 +118,7 @@ func ReadPaperListRaw(param ReadPaperListParam) (list []*Paper, total int64, err
 	}
 
 	// 查询字段
-	var fields = "T0.`id`, T0.`name`, T0.`score`, T0.`pass_score`, T0.`difficulty`, T0.`status`, T0.`memo`"
+	var fields = "T0.`id`, T0.`name`, T0.`score`, T0.`pass_score`, T0.`difficulty`, T0.`status`, T0.`create_time`, T0.`update_time`, T0.`memo`"
 
 	// 关联查询
 	var relatedSql string
@@ -151,7 +166,7 @@ func InsertPaperMulti(list []Paper) (num int64, err error) {
 func UpdatePaperOne(m Paper, fields ...string) (num int64, err error) {
 	o := orm.NewOrm()
 	if len(fields) == 0 {
-		fields = []string{"name", "score", "pass_score", "difficulty", "status", "memo"}
+		fields = []string{"name", "score", "pass_score", "difficulty", "status", "create_time", "update_time", "memo"}
 	}
 	num, err = o.Update(&m, fields...)
 	return

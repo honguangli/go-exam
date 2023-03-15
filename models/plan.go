@@ -16,14 +16,28 @@ type Plan struct {
 	PublishTime int    `orm:"column(publish_time)" form:"publish_time" json:"publish_time"`
 	Status      int    `orm:"column(status)" form:"status" json:"status"`
 	QueryGrade  int8   `orm:"column(query_grade)" form:"query_grade" json:"query_grade"`
-	CreateTime  int    `orm:"column(create_time)" form:"create_time" json:"create_time"`
+	CreateTime  int64  `orm:"column(create_time)" form:"create_time" json:"create_time"`
+	UpdateTime  int64  `orm:"column(update_time)" form:"update_time" json:"update_time"`
 	Memo        string `orm:"column(memo)" form:"memo" json:"memo"`
+}
+
+// 查询详情参数
+type ReadPlanDetailParam struct {
+	ID int `json:"id"`
 }
 
 // 查询列表参数
 type ReadPlanListParam struct {
 	BaseQueryParam
-	ClosePage bool `form:"close_page" json:"close_page"`
+	Name      string `json:"name"`
+	Status    int    `json:"status"`
+	ClosePage bool   `form:"close_page" json:"close_page"`
+}
+
+// 删除参数
+type DeletePlanParam struct {
+	ID   int   `json:"id"`
+	List []int `json:"list"`
 }
 
 // 初始化
@@ -107,7 +121,7 @@ func ReadPlanListRaw(param ReadPlanListParam) (list []*Plan, total int64, err er
 	}
 
 	// 查询字段
-	var fields = "T0.`id`, T0.`name`, T0.`paper_id`, T0.`start_time`, T0.`end_time`, T0.`duration`, T0.`publish_time`, T0.`status`, T0.`query_grade`, T0.`create_time`, T0.`memo`"
+	var fields = "T0.`id`, T0.`name`, T0.`paper_id`, T0.`start_time`, T0.`end_time`, T0.`duration`, T0.`publish_time`, T0.`status`, T0.`query_grade`, T0.`create_time`, T0.`update_time`, T0.`memo`"
 
 	// 关联查询
 	var relatedSql string
@@ -155,7 +169,7 @@ func InsertPlanMulti(list []Plan) (num int64, err error) {
 func UpdatePlanOne(m Plan, fields ...string) (num int64, err error) {
 	o := orm.NewOrm()
 	if len(fields) == 0 {
-		fields = []string{"name", "paper_id", "start_time", "end_time", "duration", "publish_time", "status", "query_grade", "create_time", "memo"}
+		fields = []string{"name", "paper_id", "start_time", "end_time", "duration", "publish_time", "status", "query_grade", "create_time", "update_time", "memo"}
 	}
 	num, err = o.Update(&m, fields...)
 	return

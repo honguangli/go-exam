@@ -39,6 +39,22 @@ func init() {
 				beego.NSRouter("/update", &controllers.QuestionController{}, "Post:Update"),
 				beego.NSRouter("/delete", &controllers.QuestionController{}, "Post:Delete"),
 			),
+			// 试卷
+			beego.NSNamespace("/paper",
+				beego.NSRouter("/list", &controllers.PaperController{}, "Post:List"),
+				beego.NSRouter("/detail", &controllers.PaperController{}, "Post:Detail"),
+				beego.NSRouter("/create", &controllers.PaperController{}, "Post:Create"),
+				beego.NSRouter("/update", &controllers.PaperController{}, "Post:Update"),
+				beego.NSRouter("/delete", &controllers.PaperController{}, "Post:Delete"),
+			),
+			// 考试计划
+			beego.NSNamespace("/plan",
+				beego.NSRouter("/list", &controllers.PlanController{}, "Post:List"),
+				beego.NSRouter("/detail", &controllers.PlanController{}, "Post:Detail"),
+				beego.NSRouter("/create", &controllers.PlanController{}, "Post:Create"),
+				beego.NSRouter("/update", &controllers.PlanController{}, "Post:Update"),
+				beego.NSRouter("/delete", &controllers.PlanController{}, "Post:Delete"),
+			),
 
 			// 权限
 			beego.NSNamespace("/permission",

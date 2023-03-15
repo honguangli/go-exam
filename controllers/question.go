@@ -55,7 +55,21 @@ func (c *QuestionController) Detail() {
 		c.Failure("获取数据失败")
 	}
 
-	c.Success(m)
+	// 查询选项
+	options, _, err := models.ReadQuestionOptionListRaw(models.ReadQuestionOptionListParam{
+		QuestionID: m.ID,
+		ClosePage:  true,
+	})
+	if err != nil {
+		logs.Info("c[Question][Detail]: 查询选项列表失败, err = %s", err.Error())
+		c.Failure("获取数据失败")
+	}
+
+	var res = make(map[string]interface{})
+	res["detail"] = m
+	res["options"] = options
+
+	c.Success(res)
 }
 
 // 创建

@@ -24,7 +24,8 @@ const (
 // 查询列表参数
 type ReadQuestionOptionListParam struct {
 	BaseQueryParam
-	ClosePage bool `form:"close_page" json:"close_page"`
+	QuestionID int  `json:"question_id"`
+	ClosePage  bool `form:"close_page" json:"close_page"`
 }
 
 // 初始化
