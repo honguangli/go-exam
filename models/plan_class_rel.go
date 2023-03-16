@@ -6,70 +6,70 @@ import (
 	"github.com/astaxie/beego/orm"
 )
 
-// 班级考生表
-type ClassUserRel struct {
+// 考试计划班级表
+type PlanClassRel struct {
 	ID      int `orm:"column(id)" form:"id" json:"id"`
+	PlanID  int `orm:"column(plan_id)" form:"plan_id" json:"plan_id"`
 	ClassID int `orm:"column(class_id)" form:"class_id" json:"class_id"`
-	UserID  int `orm:"column(user_id)" form:"user_id" json:"user_id"`
 }
 
 // 查询详情参数
-type ReadClassUserRelDetailParam struct {
+type ReadPlanClassRelDetailParam struct {
 	ID int `json:"id"`
 }
 
 // 查询列表参数
-type ReadClassUserRelListParam struct {
+type ReadPlanClassRelListParam struct {
 	BaseQueryParam
 	ClosePage bool `form:"close_page" json:"close_page"`
 }
 
 // 创建参数
-type InsertClassUserRelParam struct {
-	ClassID  int   `json:"class_id"`
-	UserList []int `json:"user_list"`
+type InsertPlanClassRelParam struct {
+	PlanID    int   `json:"plan_id"`
+	ClassList []int `json:"class_list"`
 }
 
 // 删除参数
-type DeleteClassUserRelParam struct {
+type DeletePlanClassRelParam struct {
 	ID   int   `json:"id"`
 	List []int `json:"list"`
 }
 
 // 初始化
 func init() {
-	orm.RegisterModel(new(ClassUserRel))
+	orm.RegisterModel(new(PlanClassRel))
 }
 
 // 表名
-func ClassUserRelTBName() (name string) {
-	return "class_user_rel"
+func PlanClassRelTBName() (name string) {
+	return "plan_class_rel"
 }
 
 // 自定义表名
-func (m *ClassUserRel) TableName() (name string) {
-	return ClassUserRelTBName()
+func (m *PlanClassRel) TableName() (name string) {
+	return PlanClassRelTBName()
 }
 
 // 多字段索引
-func (m *ClassUserRel) TableIndex() [][]string {
+func (m *PlanClassRel) TableIndex() [][]string {
 	return [][]string{}
 }
 
 // 多字段唯一键
-func (m *ClassUserRel) TableUnique() [][]string {
+func (m *PlanClassRel) TableUnique() [][]string {
 	return [][]string{
-		{"user_id", "class_id"},
+		{"plan_id", "class_id"},
 	}
 }
 
 // 自定义引擎
-func (m *ClassUserRel) TableEngine() string {
+func (m *PlanClassRel) TableEngine() string {
 	return "INNODB"
 }
 
 // 查询单个对象
-func ReadClassUserRelOne(id int) (m ClassUserRel, err error) {
+func ReadPlanClassRelOne(id int) (m PlanClassRel, err error) {
 	o := orm.NewOrm()
 	m.ID = id
 	err = o.Read(&m)
@@ -77,9 +77,9 @@ func ReadClassUserRelOne(id int) (m ClassUserRel, err error) {
 }
 
 // 查询多个对象
-func ReadClassUserRelList(param ReadClassUserRelListParam) (list []*ClassUserRel, total int64, err error) {
-	list = make([]*ClassUserRel, 0)
-	query := orm.NewOrm().QueryTable(ClassUserRelTBName())
+func ReadPlanClassRelList(param ReadPlanClassRelListParam) (list []*PlanClassRel, total int64, err error) {
+	list = make([]*PlanClassRel, 0)
+	query := orm.NewOrm().QueryTable(PlanClassRelTBName())
 
 	sortOrder := "id"
 	switch param.Sort {
@@ -97,8 +97,8 @@ func ReadClassUserRelList(param ReadClassUserRelListParam) (list []*ClassUserRel
 }
 
 // 查询多个对象
-func ReadClassUserRelListRaw(param ReadClassUserRelListParam) (list []*ClassUserRel, total int64, err error) {
-	list = make([]*ClassUserRel, 0)
+func ReadPlanClassRelListRaw(param ReadPlanClassRelListParam) (list []*PlanClassRel, total int64, err error) {
+	list = make([]*PlanClassRel, 0)
 	var args = make([]interface{}, 0)
 	var whereSql = "WHERE 1=1"
 
@@ -119,13 +119,13 @@ func ReadClassUserRelListRaw(param ReadClassUserRelListParam) (list []*ClassUser
 	}
 
 	// 查询字段
-	var fields = "T0.`id`, T0.`class_id`, T0.`user_id`"
+	var fields = "T0.`id`, T0.`plan_id`, T0.`class_id`"
 
 	// 关联查询
 	var relatedSql string
 
 	// 连表查询
-	var sql = fmt.Sprintf("SELECT %s FROM class_user_rel AS T0 %s %s %s %s", fields, relatedSql, whereSql, orderSql, pageSql)
+	var sql = fmt.Sprintf("SELECT %s FROM plan_class_rel AS T0 %s %s %s %s", fields, relatedSql, whereSql, orderSql, pageSql)
 
 	// 查询列表
 	total, err = orm.NewOrm().Raw(sql, args...).QueryRows(&list)
@@ -139,7 +139,7 @@ func ReadClassUserRelListRaw(param ReadClassUserRelListParam) (list []*ClassUser
 	}
 
 	// 查询总数
-	var countSql = fmt.Sprintf("SELECT count(*) AS count FROM class_user_rel AS T0 %s %s", relatedSql, whereSql)
+	var countSql = fmt.Sprintf("SELECT count(*) AS count FROM plan_class_rel AS T0 %s %s", relatedSql, whereSql)
 	var count RawCount
 	err = orm.NewOrm().Raw(countSql, args...).QueryRow(&count)
 	if err != nil {
@@ -150,62 +150,62 @@ func ReadClassUserRelListRaw(param ReadClassUserRelListParam) (list []*ClassUser
 }
 
 // 插入单个对象
-func InsertClassUserRelOne(m ClassUserRel) (id int64, err error) {
+func InsertPlanClassRelOne(m PlanClassRel) (id int64, err error) {
 	o := orm.NewOrm()
 	id, err = o.Insert(&m)
 	return
 }
 
 // 插入多个对象
-func InsertClassUserRelMulti(list []ClassUserRel) (num int64, err error) {
+func InsertPlanClassRelMulti(list []PlanClassRel) (num int64, err error) {
 	o := orm.NewOrm()
 	num, err = o.InsertMulti(100, list)
 	return
 }
 
 // 更新单个对象
-func UpdateClassUserRelOne(m ClassUserRel, fields ...string) (num int64, err error) {
+func UpdatePlanClassRelOne(m PlanClassRel, fields ...string) (num int64, err error) {
 	o := orm.NewOrm()
 	if len(fields) == 0 {
-		fields = []string{"class_id", "user_id"}
+		fields = []string{"plan_id", "class_id"}
 	}
 	num, err = o.Update(&m, fields...)
 	return
 }
 
 // 更新多个对象
-func UpdateClassUserRelMulti(ids []int, params map[string]interface{}) (num int64, err error) {
+func UpdatePlanClassRelMulti(ids []int, params map[string]interface{}) (num int64, err error) {
 	o := orm.NewOrm()
-	num, err = o.QueryTable(ClassUserRelTBName()).Filter("id__in", ids).Update(params)
+	num, err = o.QueryTable(PlanClassRelTBName()).Filter("id__in", ids).Update(params)
 	return
 }
 
 // 删除单个对象
-func DeleteClassUserRelOne(id int) (num int64, err error) {
+func DeletePlanClassRelOne(id int) (num int64, err error) {
 	o := orm.NewOrm()
-	num, err = o.Delete(&ClassUserRel{ID: id})
+	num, err = o.Delete(&PlanClassRel{ID: id})
 	return
 }
 
 // 删除多个对象
-func DeleteClassUserRelMulti(ids []int) (num int64, err error) {
+func DeletePlanClassRelMulti(ids []int) (num int64, err error) {
 	o := orm.NewOrm()
-	num, err = o.QueryTable(ClassUserRelTBName()).Filter("id__in", ids).Delete()
+	num, err = o.QueryTable(PlanClassRelTBName()).Filter("id__in", ids).Delete()
 	return
 }
 
 // 插入或更新多个对象
-func InsertOrUpdateClassUserRelMulti(param InsertClassUserRelParam) (num int64, err error) {
+func InsertOrUpdatePlanClassRelMulti(param InsertPlanClassRelParam) (num int64, err error) {
 	var m = make(map[int]struct{})
-	for _, v := range param.UserList {
+	for _, v := range param.ClassList {
 		m[v] = struct{}{}
 	}
-	var list = make([]ClassUserRel, 0)
+	var list = make([]PlanClassRel, 0)
 	for k := range m {
-		list = append(list, ClassUserRel{ClassID: param.ClassID, UserID: k})
+		list = append(list, PlanClassRel{PlanID: param.PlanID, ClassID: k})
 	}
 	if len(list) == 0 {
-		return 0, errors.New("参数错误: 用户列表不能为空")
+		return 0, errors.New("参数错误: 班级列表不能为空")
 	}
 	num = int64(len(list))
 

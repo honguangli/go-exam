@@ -1,0 +1,25 @@
+2023/03/16 10:17:37.388 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 10:17:49.123 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 10:18:31.235 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 10:18:44.608 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 10:19:29.103 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 10:20:52.359 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 10:22:28.122 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 10:22:30.897 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 10:22:32.423 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 11:10:11.483 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 11:11:11.587 [I] [class.go:185]  c[Class][PushUser]: 更新失败, err = 参数错误: 用户列表不能为空
+2023/03/16 11:44:26.435 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 11:44:28.923 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 11:46:38.222 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 11:46:39.833 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 11:48:24.912 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 11:48:26.434 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 13:29:45.670 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 13:56:27.762 [I] [plan.go:188]  c[Class][PushClass]: 更新失败, err = 参数错误: 班级列表不能为空
+2023/03/16 14:02:51.290 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 14:03:43.549 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 14:04:22.522 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 14:05:40.330 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 14:05:42.027 [I] [app.go:214]  http server Running on http://:11549
+2023/03/16 14:40:42.330 [I] [plan.go:89]  c[Plan][Update]: 参数错误, err = json: cannot unmarshal string into Go struct field Plan.start_time of type int, req = {"req_id":"wdaqEaAmPqIicJMqPgPyH","data":"{\"id\":1,\"name\":\"计算机网络考试\",\"paper_id\":1,\"start_time\":\"ti0e0t凌晨0p\",\"end_time\":0,\"duration\":1,\"publish_time\":0,\"status\":0,\"query_grade\":0,\"memo\":\"\"}","time":1678948842,"sign":"96f1a9c13fdee81bb146382d55298ba2"}

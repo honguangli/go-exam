@@ -3,13 +3,14 @@ package models
 import (
 	"fmt"
 	"github.com/astaxie/beego/orm"
+	"strings"
 )
 
 // 用户表
 type User struct {
 	ID         int    `orm:"column(id)" form:"id" json:"id"`
 	Name       string `orm:"column(name)" form:"name" json:"name"`
-	Password   string `orm:"column(password)" form:"password" json:"password"`
+	Password   string `orm:"column(password)" form:"password" json:"-"`
 	Type       int    `orm:"column(type)" form:"type" json:"type"`
 	TrueName   string `orm:"column(true_name)" form:"true_name" json:"true_name"`
 	Mobile     string `orm:"column(mobile)" form:"mobile" json:"mobile"`
@@ -259,6 +260,74 @@ func UpdateUserRoleMulti(param UpdateUserRoleParam) (err error) {
 
 	// 添加新关系
 	_, err = o.InsertMulti(100, list)
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	err = o.Commit()
+	return
+}
+
+// 删除单个对象
+func DeleteUserOneWithRel(id int) (num int64, err error) {
+	o := orm.NewOrm()
+
+	err = o.Begin()
+	if err != nil {
+		return
+	}
+
+	// 删除用户与角色关系
+	_, err = o.Raw("DELETE FROM user_role_rel WHERE user_id = ?", id).Exec()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 删除用户与班级关系
+	_, err = o.Raw("DELETE FROM class_user_rel WHERE user_id = ?", id).Exec()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 删除用户
+	_, err = o.Raw("DELETE FROM user WHERE id = ?", id).Exec()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	err = o.Commit()
+	return
+}
+
+// 删除多个对象
+func DeleteUserMultiWithRel(ids []int) (num int64, err error) {
+	o := orm.NewOrm()
+
+	err = o.Begin()
+	if err != nil {
+		return
+	}
+
+	// 删除用户与角色关系
+	_, err = o.Raw(fmt.Sprintf("DELETE FROM user_role_rel WHERE user_id IN (?%s)", strings.Repeat(", ?", len(ids)-1)), ids).Exec()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 删除用户与班级关系
+	_, err = o.Raw(fmt.Sprintf("DELETE FROM class_user_rel WHERE user_id IN (?%s)", strings.Repeat(", ?", len(ids)-1)), ids).Exec()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 删除用户
+	_, err = o.Raw(fmt.Sprintf("DELETE FROM user WHERE id IN (?%s)", strings.Repeat(", ?", len(ids)-1)), ids).Exec()
 	if err != nil {
 		o.Rollback()
 		return

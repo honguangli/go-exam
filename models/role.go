@@ -259,7 +259,7 @@ func UpdateRolePermissionMulti(param UpdateRolePermissionParam) (err error) {
 	return
 }
 
-// 删除多个对象
+// 删除单个对象
 func DeleteRoleOneWithRel(id int) (num int64, err error) {
 	o := orm.NewOrm()
 

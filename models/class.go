@@ -208,37 +208,3 @@ func DeleteClassMulti(ids []int) (num int64, err error) {
 	num, err = o.QueryTable(ClassTBName()).Filter("id__in", ids).Delete()
 	return
 }
-
-// 更新班级用户
-func UpdateClassUserMulti(param UpdateClassUserParam) (err error) {
-	var list = make([]*ClassUserRel, len(param.UserList))
-	for k, v := range param.UserList {
-		list[k] = &ClassUserRel{
-			ClassID: param.ID,
-			UserID:  v,
-		}
-	}
-
-	o := orm.NewOrm()
-	err = o.Begin()
-	if err != nil {
-		return
-	}
-
-	// 删除旧关系
-	_, err = o.Raw("DELETE FROM class_user_rel WHERE class_id = ?", param.ID).Exec()
-	if err != nil {
-		o.Rollback()
-		return
-	}
-
-	// 添加新关系
-	_, err = o.InsertMulti(100, list)
-	if err != nil {
-		o.Rollback()
-		return
-	}
-
-	err = o.Commit()
-	return
-}

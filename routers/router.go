@@ -54,6 +54,9 @@ func init() {
 				beego.NSRouter("/create", &controllers.PlanController{}, "Post:Create"),
 				beego.NSRouter("/update", &controllers.PlanController{}, "Post:Update"),
 				beego.NSRouter("/delete", &controllers.PlanController{}, "Post:Delete"),
+				beego.NSRouter("/class/list", &controllers.PlanController{}, "Post:ClassList"),
+				beego.NSRouter("/class/push", &controllers.PlanController{}, "Post:PushClass"),
+				beego.NSRouter("/class/delete", &controllers.PlanController{}, "Post:DeleteClass"),
 			),
 
 			// 权限
@@ -94,8 +97,10 @@ func init() {
 				beego.NSRouter("/detail", &controllers.ClassController{}, "Post:Detail"),
 				beego.NSRouter("/create", &controllers.ClassController{}, "Post:Create"),
 				beego.NSRouter("/update", &controllers.ClassController{}, "Post:Update"),
-				beego.NSRouter("/user", &controllers.ClassController{}, "Post:UpdateUser"),
 				beego.NSRouter("/delete", &controllers.ClassController{}, "Post:Delete"),
+				beego.NSRouter("/user/list", &controllers.ClassController{}, "Post:UserList"),
+				beego.NSRouter("/user/push", &controllers.ClassController{}, "Post:PushUser"),
+				beego.NSRouter("/user/delete", &controllers.ClassController{}, "Post:DeleteUser"),
 			),
 		),
 	))

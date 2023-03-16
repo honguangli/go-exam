@@ -149,3 +149,97 @@ func (c *PlanController) Delete() {
 
 	c.Success(res)
 }
+
+// 查询考试班级列表
+func (c *PlanController) ClassList() {
+	var param models.ReadPlanClassRelModelListParam
+	var err error
+	if err = c.ParseParam(&param); err != nil {
+		logs.Info("c[Class][ClassList]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+
+	// 查询列表
+	list, total, err := models.ReadPlanClassRelModelListRaw(param)
+	if err != nil {
+		logs.Info("c[Class][ClassList]: 查询列表失败, err = %s", err.Error())
+		c.Failure("获取数据失败")
+	}
+
+	var res = make(map[string]interface{})
+	res["list"] = list
+	res["total"] = total
+
+	c.Success(res)
+}
+
+// 添加考试班级
+func (c *PlanController) PushClass() {
+	var param models.InsertPlanClassRelParam
+	var err error
+	if err = c.ParseParam(&param); err != nil {
+		logs.Info("c[Class][PushClass]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+
+	// 添加用户
+	num, err := models.InsertOrUpdatePlanClassRelMulti(param)
+	if err != nil {
+		logs.Info("c[Class][PushClass]: 更新失败, err = %s", err.Error())
+		c.Failure("操作失败")
+	}
+
+	var res = make(map[string]interface{})
+	res["num"] = num
+
+	c.Success(res)
+}
+
+// 删除考试班级
+func (c *PlanController) DeleteClass() {
+	var param models.DeletePlanClassRelParam
+	var err error
+	if err = c.ParseParam(&param); err != nil {
+		logs.Info("c[Class][DeleteClass]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+	if param.ID < 0 && len(param.List) == 0 {
+		logs.Info("c[Class][DeleteClass]: 参数错误, 无效id或list为空, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+	for _, v := range param.List {
+		if v <= 0 {
+			logs.Info("c[Class][DeleteClass]: 参数错误, 无效id, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+			c.Failure("参数错误")
+		}
+	}
+
+	var num int64
+	if param.ID > 0 {
+		// 删除
+		num, err = models.DeletePlanClassRelOne(param.ID)
+		if err != nil {
+			logs.Info("c[Class][DeleteClass]: 删除失败, err = %s", err.Error())
+			c.Failure("操作失败")
+		}
+	} else if len(param.List) == 1 {
+		// 删除
+		num, err = models.DeletePlanClassRelOne(param.List[0])
+		if err != nil {
+			logs.Info("c[Class][DeleteClass]: 删除失败, err = %s", err.Error())
+			c.Failure("操作失败")
+		}
+	} else {
+		// 批量删除
+		num, err = models.DeletePlanClassRelMulti(param.List)
+		if err != nil {
+			logs.Info("c[Class][DeleteClass]: 批量删除失败, err = %s", err.Error())
+			c.Failure("操作失败")
+		}
+	}
+
+	var res = make(map[string]interface{})
+	res["num"] = num
+
+	c.Success(res)
+}
