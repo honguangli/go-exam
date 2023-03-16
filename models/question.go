@@ -7,20 +7,20 @@ import (
 
 // 试题表
 type Question struct {
-	ID           int    `orm:"column(id)" form:"id" json:"id"`
-	SubjectID    int    `orm:"column(subject_id)" form:"subject_id" json:"subject_id"`
-	Name         string `orm:"column(name)" form:"name" json:"name"`
-	Type         int    `orm:"column(type)" form:"type" json:"type"`
-	Content      string `orm:"column(content)" form:"content" json:"content"`
-	Tips         string `orm:"column(tips)" form:"tips" json:"tips"`
-	Analysis     string `orm:"column(analysis)" form:"analysis" json:"analysis"`
-	Difficulty   int    `orm:"column(difficulty)" form:"difficulty" json:"difficulty"`
-	KnowledgeIds string `orm:"column(knowledge_ids)" form:"knowledge_ids" json:"knowledge_ids"`
-	Score        int    `orm:"column(score)" form:"score" json:"score"`
-	Status       int    `orm:"column(status)" form:"status" json:"status"`
-	CreateTime   int64  `orm:"column(create_time)" form:"create_time" json:"create_time"`
-	UpdateTime   int64  `orm:"column(update_time)" form:"update_time" json:"update_time"`
-	Memo         string `orm:"column(memo)" form:"memo" json:"memo"`
+	ID           int     `orm:"column(id)" form:"id" json:"id"`
+	SubjectID    int     `orm:"column(subject_id)" form:"subject_id" json:"subject_id"`
+	Name         string  `orm:"column(name)" form:"name" json:"name"`
+	Type         int     `orm:"column(type)" form:"type" json:"type"`
+	Content      string  `orm:"column(content)" form:"content" json:"content"`
+	Tips         string  `orm:"column(tips)" form:"tips" json:"tips"`
+	Analysis     string  `orm:"column(analysis)" form:"analysis" json:"analysis"`
+	Difficulty   float64 `orm:"column(difficulty)" form:"difficulty" json:"difficulty"`
+	KnowledgeIds string  `orm:"column(knowledge_ids)" form:"knowledge_ids" json:"knowledge_ids"`
+	Score        int     `orm:"column(score)" form:"score" json:"score"`
+	Status       int     `orm:"column(status)" form:"status" json:"status"`
+	CreateTime   int64   `orm:"column(create_time)" form:"create_time" json:"create_time"`
+	UpdateTime   int64   `orm:"column(update_time)" form:"update_time" json:"update_time"`
+	Memo         string  `orm:"column(memo)" form:"memo" json:"memo"`
 }
 
 // 类型

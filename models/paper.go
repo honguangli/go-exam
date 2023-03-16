@@ -7,15 +7,15 @@ import (
 
 // 试卷表
 type Paper struct {
-	ID         int    `orm:"column(id)" form:"id" json:"id"`
-	Name       string `orm:"column(name)" form:"name" json:"name"`
-	Score      int    `orm:"column(score)" form:"score" json:"score"`
-	PassScore  int    `orm:"column(pass_score)" form:"pass_score" json:"pass_score"`
-	Difficulty int    `orm:"column(difficulty)" form:"difficulty" json:"difficulty"`
-	Status     int    `orm:"column(status)" form:"status" json:"status"`
-	CreateTime int64  `orm:"column(create_time)" form:"create_time" json:"create_time"`
-	UpdateTime int64  `orm:"column(update_time)" form:"update_time" json:"update_time"`
-	Memo       string `orm:"column(memo)" form:"memo" json:"memo"`
+	ID         int     `orm:"column(id)" form:"id" json:"id"`
+	Name       string  `orm:"column(name)" form:"name" json:"name"`
+	Score      int     `orm:"column(score)" form:"score" json:"score"`
+	PassScore  int     `orm:"column(pass_score)" form:"pass_score" json:"pass_score"`
+	Difficulty float64 `orm:"column(difficulty)" form:"difficulty" json:"difficulty"`
+	Status     int     `orm:"column(status)" form:"status" json:"status"`
+	CreateTime int64   `orm:"column(create_time)" form:"create_time" json:"create_time"`
+	UpdateTime int64   `orm:"column(update_time)" form:"update_time" json:"update_time"`
+	Memo       string  `orm:"column(memo)" form:"memo" json:"memo"`
 }
 
 // 查询详情参数
