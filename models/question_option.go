@@ -92,6 +92,11 @@ func ReadQuestionOptionListRaw(param ReadQuestionOptionListParam) (list []*Quest
 	var args = make([]interface{}, 0)
 	var whereSql = "WHERE 1=1"
 
+	if param.QuestionID > 0 {
+		whereSql += " AND T0.question_id = ?"
+		args = append(args, param.QuestionID)
+	}
+
 	// 排序
 	var orderSql = "ORDER BY "
 	switch param.Sort {

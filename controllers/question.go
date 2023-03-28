@@ -3,7 +3,6 @@ package controllers
 import (
 	"github.com/astaxie/beego/logs"
 	"go-exam/models"
-	"time"
 )
 
 // 试题
@@ -74,16 +73,15 @@ func (c *QuestionController) Detail() {
 
 // 创建
 func (c *QuestionController) Create() {
-	var m models.Question
+	var param models.InsertQuestionParam
 	var err error
-	if err = c.ParseParam(&m); err != nil {
+	if err = c.ParseParam(&param); err != nil {
 		logs.Info("c[Question][Create]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
 		c.Failure("参数错误")
 	}
 
 	// 创建
-	m.CreateTime = time.Now().Unix()
-	id, err := models.InsertQuestionOne(m)
+	id, err := models.InsertQuestionOneWithOptions(param)
 	if err != nil {
 		logs.Info("c[Question][Create]: 创建失败, err = %s", err.Error())
 		c.Failure("操作失败")
@@ -97,16 +95,15 @@ func (c *QuestionController) Create() {
 
 // 更新
 func (c *QuestionController) Update() {
-	var m models.Question
+	var param models.UpdateQuestionParam
 	var err error
-	if err = c.ParseParam(&m); err != nil {
+	if err = c.ParseParam(&param); err != nil {
 		logs.Info("c[Question][Update]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
 		c.Failure("参数错误")
 	}
 
 	// 更新
-	m.UpdateTime = time.Now().Unix()
-	_, err = models.UpdateQuestionOne(m, "subject_id", "name", "type", "content", "tips", "analysis", "difficulty", "knowledge_ids", "score", "status", "update_time", "memo")
+	_, err = models.UpdateQuestionOneWithOptions(param)
 	if err != nil {
 		logs.Info("c[Question][Update]: 更新失败, err = %s", err.Error())
 		c.Failure("操作失败")

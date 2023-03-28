@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"github.com/astaxie/beego/orm"
+	"time"
 )
 
 // 试题表
@@ -57,6 +58,18 @@ type ReadQuestionListParam struct {
 	Type      int    `json:"type"`
 	Status    int    `json:"status"`
 	ClosePage bool   `form:"close_page" json:"close_page"`
+}
+
+// 创建参数
+type InsertQuestionParam struct {
+	Question Question          `json:"question"`
+	Options  []*QuestionOption `json:"options"`
+}
+
+// 更新参数
+type UpdateQuestionParam struct {
+	Question Question          `json:"question"`
+	Options  []*QuestionOption `json:"options"`
 }
 
 // 删除参数
@@ -234,5 +247,81 @@ func DeleteQuestionOne(id int) (num int64, err error) {
 func DeleteQuestionMulti(ids []int) (num int64, err error) {
 	o := orm.NewOrm()
 	num, err = o.QueryTable(QuestionTBName()).Filter("id__in", ids).Delete()
+	return
+}
+
+// 插入单个对象
+func InsertQuestionOneWithOptions(param InsertQuestionParam) (id int64, err error) {
+	o := orm.NewOrm()
+
+	err = o.Begin()
+	if err != nil {
+		return
+	}
+
+	// 保存试题
+	param.Question.Status = QUESTION_ENABLE
+	param.Question.CreateTime = time.Now().Unix()
+	id, err = o.Insert(&param.Question)
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 保存选项
+	if len(param.Options) > 0 {
+		for _, v := range param.Options {
+			v.ID = 0
+			v.QuestionID = param.Question.ID
+		}
+		_, err = o.InsertMulti(100, param.Options)
+		if err != nil {
+			o.Rollback()
+			return
+		}
+	}
+
+	err = o.Commit()
+	return
+}
+
+// 更新单个对象
+func UpdateQuestionOneWithOptions(param UpdateQuestionParam) (num int64, err error) {
+	o := orm.NewOrm()
+
+	err = o.Begin()
+	if err != nil {
+		return
+	}
+
+	// 更新试题
+	param.Question.UpdateTime = time.Now().Unix()
+	num, err = o.Update(&param.Question, "subject_id", "name", "type", "content", "tips", "analysis", "difficulty", "knowledge_ids", "score", "status", "update_time", "memo")
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 删除选项
+	_, err = o.QueryTable(QuestionOptionTBName()).Filter("question_id", param.Question.ID).Delete()
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 保存选项
+	if len(param.Options) > 0 {
+		for _, v := range param.Options {
+			v.ID = 0
+			v.QuestionID = param.Question.ID
+		}
+		_, err = o.InsertMulti(100, param.Options)
+		if err != nil {
+			o.Rollback()
+			return
+		}
+	}
+
+	err = o.Commit()
 	return
 }
