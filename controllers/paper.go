@@ -58,6 +58,30 @@ func (c *PaperController) Detail() {
 	c.Success(m)
 }
 
+// 智能组卷
+func (c *PaperController) Auto() {
+	// TODO paper表新增各题分值字段
+
+	// 获取参数（试卷参数）
+
+	// 调用组卷算法获取试题列表
+
+	// 保存试卷信息
+
+	// 保存试卷试题列表（试题列表、试题选项列表）
+}
+
+// 手工组卷
+func (c *PaperController) Op() {
+	// TODO paper表新增各题分值字段
+
+	// 获取参数（试卷参数、试题集合）
+
+	// 更新试卷信息
+
+	// 删除原有试题列表、选项列表，保存新试卷试题列表（试题列表、试题选项列表）
+}
+
 // 创建
 func (c *PaperController) Create() {
 	var m models.Paper
