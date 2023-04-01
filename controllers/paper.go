@@ -60,29 +60,34 @@ func (c *PaperController) Detail() {
 
 // 智能组卷
 func (c *PaperController) Auto() {
-	// TODO paper表新增各题分值字段
-
-	// 获取参数（试卷参数）
+	var m models.Paper
+	var err error
+	if err = c.ParseParam(&m); err != nil {
+		logs.Info("c[Paper][Create]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
 
 	// 调用组卷算法获取试题列表
 
 	// 保存试卷信息
 
 	// 保存试卷试题列表（试题列表、试题选项列表）
+
+	// 创建
+	m.CreateTime = time.Now().Unix()
+	id, err := models.InsertPaperOne(m)
+	if err != nil {
+		logs.Info("c[Paper][Create]: 创建失败, err = %s", err.Error())
+		c.Failure("操作失败")
+	}
+
+	var res = make(map[string]interface{})
+	res["id"] = id
+
+	c.Success(res)
 }
 
 // 手工组卷
-func (c *PaperController) Op() {
-	// TODO paper表新增各题分值字段
-
-	// 获取参数（试卷参数、试题集合）
-
-	// 更新试卷信息
-
-	// 删除原有试题列表、选项列表，保存新试卷试题列表（试题列表、试题选项列表）
-}
-
-// 创建
 func (c *PaperController) Create() {
 	var m models.Paper
 	var err error
@@ -90,6 +95,12 @@ func (c *PaperController) Create() {
 		logs.Info("c[Paper][Create]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
 		c.Failure("参数错误")
 	}
+
+	// 获取参数（试卷参数、试题集合）
+
+	// 更新试卷信息
+
+	// 删除原有试题列表、选项列表，保存新试卷试题列表（试题列表、试题选项列表）
 
 	// 创建
 	m.CreateTime = time.Now().Unix()

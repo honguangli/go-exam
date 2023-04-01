@@ -7,15 +7,29 @@ import (
 
 // 试卷表
 type Paper struct {
-	ID         int     `orm:"column(id)" form:"id" json:"id"`
-	Name       string  `orm:"column(name)" form:"name" json:"name"`
-	Score      int     `orm:"column(score)" form:"score" json:"score"`
-	PassScore  int     `orm:"column(pass_score)" form:"pass_score" json:"pass_score"`
-	Difficulty float64 `orm:"column(difficulty)" form:"difficulty" json:"difficulty"`
-	Status     int     `orm:"column(status)" form:"status" json:"status"`
-	CreateTime int64   `orm:"column(create_time)" form:"create_time" json:"create_time"`
-	UpdateTime int64   `orm:"column(update_time)" form:"update_time" json:"update_time"`
-	Memo       string  `orm:"column(memo)" form:"memo" json:"memo"`
+	ID                int     `orm:"column(id)" form:"id" json:"id"`
+	Name              string  `orm:"column(name)" form:"name" json:"name"`
+	Score             int     `orm:"column(score)" form:"score" json:"score"`
+	PassScore         int     `orm:"column(pass_score)" form:"pass_score" json:"pass_score"`
+	Difficulty        float64 `orm:"column(difficulty)" form:"difficulty" json:"difficulty"`
+	ChoiceSingleNum   int     `orm:"column(choice_single_num)" form:"choice_single_num" json:"choice_single_num"`
+	ChoiceSingleScore int     `orm:"column(choice_single_score)" form:"choice_single_score" json:"choice_single_score"`
+	ChoiceMultiNum    int     `orm:"column(choice_multi_num)" form:"choice_multi_num" json:"choice_multi_num"`
+	ChoiceMultiScore  int     `orm:"column(choice_multi_score)" form:"choice_multi_score" json:"choice_multi_score"`
+	JudgeNum          int     `orm:"column(judge_num)" form:"judge_num" json:"judge_num"`
+	JudgeScore        int     `orm:"column(judge_score)" form:"judge_score" json:"judge_score"`
+	BlankSingleNum    int     `orm:"column(blank_single_num)" form:"blank_single_num" json:"blank_single_num"`
+	BlankSingleScore  int     `orm:"column(blank_single_score)" form:"blank_single_score" json:"blank_single_score"`
+	BlankMultiNum     int     `orm:"column(blank_multi_num)" form:"blank_multi_num" json:"blank_multi_num"`
+	BlankMultiScore   int     `orm:"column(blank_multi_score)" form:"blank_multi_score" json:"blank_multi_score"`
+	AnswerSingleNum   int     `orm:"column(answer_single_num)" form:"answer_single_num" json:"answer_single_num"`
+	AnswerSingleScore int     `orm:"column(answer_single_score)" form:"answer_single_score" json:"answer_single_score"`
+	AnswerMultiNum    int     `orm:"column(answer_multi_num)" form:"answer_multi_num" json:"answer_multi_num"`
+	AnswerMultiScore  int     `orm:"column(answer_multi_score)" form:"answer_multi_score" json:"answer_multi_score"`
+	Status            int     `orm:"column(status)" form:"status" json:"status"`
+	CreateTime        int64   `orm:"column(create_time)" form:"create_time" json:"create_time"`
+	UpdateTime        int64   `orm:"column(update_time)" form:"update_time" json:"update_time"`
+	Memo              string  `orm:"column(memo)" form:"memo" json:"memo"`
 }
 
 // 查询详情参数
@@ -118,7 +132,7 @@ func ReadPaperListRaw(param ReadPaperListParam) (list []*Paper, total int64, err
 	}
 
 	// 查询字段
-	var fields = "T0.`id`, T0.`name`, T0.`score`, T0.`pass_score`, T0.`difficulty`, T0.`status`, T0.`create_time`, T0.`update_time`, T0.`memo`"
+	var fields = "T0.`id`, T0.`name`, T0.`score`, T0.`pass_score`, T0.`difficulty`, T0.`choice_single_num`, T0.`choice_single_score`, T0.`choice_multi_num`, T0.`choice_multi_score`, T0.`judge_num`, T0.`judge_score`, T0.`blank_single_num`, T0.`blank_single_score`, T0.`blank_multi_num`, T0.`blank_multi_score`, T0.`answer_single_num`, T0.`answer_single_score`, T0.`answer_multi_num`, T0.`answer_multi_score`, T0.`status`, T0.`create_time`, T0.`update_time`, T0.`memo`"
 
 	// 关联查询
 	var relatedSql string
@@ -166,7 +180,7 @@ func InsertPaperMulti(list []Paper) (num int64, err error) {
 func UpdatePaperOne(m Paper, fields ...string) (num int64, err error) {
 	o := orm.NewOrm()
 	if len(fields) == 0 {
-		fields = []string{"name", "score", "pass_score", "difficulty", "status", "create_time", "update_time", "memo"}
+		fields = []string{"name", "score", "pass_score", "difficulty", "choice_single_num", "choice_single_score", "choice_multi_num", "choice_multi_score", "judge_num", "judge_score", "blank_single_num", "blank_single_score", "blank_multi_num", "blank_multi_score", "answer_single_num", "answer_single_score", "answer_multi_num", "answer_multi_score", "status", "create_time", "update_time", "memo"}
 	}
 	num, err = o.Update(&m, fields...)
 	return

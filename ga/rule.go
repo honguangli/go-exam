@@ -10,8 +10,8 @@ type Rule struct {
 	DifficultyWeight  float64 `json:"difficulty_weight"`   // 难度权重
 	Points            []int   `json:"points"`              // 试卷期望包含知识点
 	PointsWeight      float64 `json:"points_weight"`       // 知识点权重
-	ChoiceSingleNum   int     `json:"single_num"`          // 单选题数量
-	ChoiceSingleScore int     `json:"single_score"`        // 单选题分值
+	ChoiceSingleNum   int     `json:"choice_single_num"`   // 单选题数量
+	ChoiceSingleScore int     `json:"choice_single_score"` // 单选题分值
 	ChoiceMultiNum    int     `json:"choice_multi_num"`    // 多选题数量
 	ChoiceMultiScore  int     `json:"choice_multi_score"`  // 多选题分值
 	JudgeNum          int     `json:"judge_num"`           // 判断题数量
