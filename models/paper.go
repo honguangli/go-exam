@@ -1,14 +1,19 @@
 package models
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/astaxie/beego/orm"
+	"strings"
+	"time"
 )
 
 // 试卷表
 type Paper struct {
 	ID                int     `orm:"column(id)" form:"id" json:"id"`
 	Name              string  `orm:"column(name)" form:"name" json:"name"`
+	SubjectID         int     `orm:"column(subject_id)" form:"subject_id" json:"subject_id"`
+	KnowledgeIds      string  `orm:"column(knowledge_ids)" form:"knowledge_ids" json:"knowledge_ids"`
 	Score             int     `orm:"column(score)" form:"score" json:"score"`
 	PassScore         int     `orm:"column(pass_score)" form:"pass_score" json:"pass_score"`
 	Difficulty        float64 `orm:"column(difficulty)" form:"difficulty" json:"difficulty"`
@@ -32,6 +37,12 @@ type Paper struct {
 	Memo              string  `orm:"column(memo)" form:"memo" json:"memo"`
 }
 
+// 状态
+const (
+	PAPER_EDIT   = 0 // 草稿
+	PAPER_FREEZE = 1 // 已发布
+)
+
 // 查询详情参数
 type ReadPaperDetailParam struct {
 	ID int `json:"id"`
@@ -40,6 +51,7 @@ type ReadPaperDetailParam struct {
 // 查询列表参数
 type ReadPaperListParam struct {
 	BaseQueryParam
+	SubjectID int    `json:"subject_id"`
 	Name      string `json:"name"`
 	Status    int    `json:"status"`
 	ClosePage bool   `form:"close_page" json:"close_page"`
@@ -132,7 +144,7 @@ func ReadPaperListRaw(param ReadPaperListParam) (list []*Paper, total int64, err
 	}
 
 	// 查询字段
-	var fields = "T0.`id`, T0.`name`, T0.`score`, T0.`pass_score`, T0.`difficulty`, T0.`choice_single_num`, T0.`choice_single_score`, T0.`choice_multi_num`, T0.`choice_multi_score`, T0.`judge_num`, T0.`judge_score`, T0.`blank_single_num`, T0.`blank_single_score`, T0.`blank_multi_num`, T0.`blank_multi_score`, T0.`answer_single_num`, T0.`answer_single_score`, T0.`answer_multi_num`, T0.`answer_multi_score`, T0.`status`, T0.`create_time`, T0.`update_time`, T0.`memo`"
+	var fields = "T0.`id`, T0.`name`, T0.`subject_id`, T0.`knowledge_ids`, T0.`score`, T0.`pass_score`, T0.`difficulty`, T0.`choice_single_num`, T0.`choice_single_score`, T0.`choice_multi_num`, T0.`choice_multi_score`, T0.`judge_num`, T0.`judge_score`, T0.`blank_single_num`, T0.`blank_single_score`, T0.`blank_multi_num`, T0.`blank_multi_score`, T0.`answer_single_num`, T0.`answer_single_score`, T0.`answer_multi_num`, T0.`answer_multi_score`, T0.`status`, T0.`create_time`, T0.`update_time`, T0.`memo`"
 
 	// 关联查询
 	var relatedSql string
@@ -180,7 +192,7 @@ func InsertPaperMulti(list []Paper) (num int64, err error) {
 func UpdatePaperOne(m Paper, fields ...string) (num int64, err error) {
 	o := orm.NewOrm()
 	if len(fields) == 0 {
-		fields = []string{"name", "score", "pass_score", "difficulty", "choice_single_num", "choice_single_score", "choice_multi_num", "choice_multi_score", "judge_num", "judge_score", "blank_single_num", "blank_single_score", "blank_multi_num", "blank_multi_score", "answer_single_num", "answer_single_score", "answer_multi_num", "answer_multi_score", "status", "create_time", "update_time", "memo"}
+		fields = []string{"name", "subject_id", "knowledge_ids", "score", "pass_score", "difficulty", "choice_single_num", "choice_single_score", "choice_multi_num", "choice_multi_score", "judge_num", "judge_score", "blank_single_num", "blank_single_score", "blank_multi_num", "blank_multi_score", "answer_single_num", "answer_single_score", "answer_multi_num", "answer_multi_score", "status", "create_time", "update_time", "memo"}
 	}
 	num, err = o.Update(&m, fields...)
 	return
@@ -204,5 +216,171 @@ func DeletePaperOne(id int) (num int64, err error) {
 func DeletePaperMulti(ids []int) (num int64, err error) {
 	o := orm.NewOrm()
 	num, err = o.QueryTable(PaperTBName()).Filter("id__in", ids).Delete()
+	return
+}
+
+// 智能组卷试卷
+func InsertPaperOneWithQuestionList(m Paper, list []*Question) (id int64, err error) {
+	o := orm.NewOrm()
+
+	// 查询试卷试题
+	var qid = make([]int, 0)
+	for _, v := range list {
+		qid = append(qid, v.ID)
+	}
+	var questionList = make([]*Question, 0)
+	var optionList = make([]*QuestionOption, 0)
+	var optionMap = make(map[int][]*QuestionOption, 0)
+	_, err = o.Raw(fmt.Sprintf("SELECT * FROM question WHERE id IN (?%s)", strings.Repeat(", ?", len(qid)-1)), qid).QueryRows(&questionList)
+	if err != nil {
+		return
+	}
+	_, err = o.Raw(fmt.Sprintf("SELECT * FROM question_option WHERE question_id IN (?%s)", strings.Repeat(", ?", len(qid)-1)), qid).QueryRows(&optionList)
+	if err != nil {
+		return
+	}
+	for _, v := range optionList {
+		if _, ok := optionMap[v.QuestionID]; !ok {
+			optionMap[v.QuestionID] = []*QuestionOption{v}
+		} else {
+			optionMap[v.QuestionID] = append(optionMap[v.QuestionID], v)
+		}
+	}
+
+	err = o.Begin()
+	if err != nil {
+		return
+	}
+
+	// 保存试卷
+	m.Status = PAPER_EDIT
+	m.CreateTime = time.Now().Unix()
+	id, err = o.Insert(&m)
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 保存试题
+	var paperQuestionOptionList = make([]*PaperQuestionOption, 0)
+	for _, question := range questionList {
+		var paperQuestion = PaperQuestion{
+			ID:           0,
+			PaperID:      m.ID,
+			OriginID:     question.ID,
+			SubjectID:    question.SubjectID,
+			Name:         question.Name,
+			Type:         question.Type,
+			Content:      question.Content,
+			Tips:         question.Tips,
+			Analysis:     question.Analysis,
+			Difficulty:   question.Difficulty,
+			KnowledgeIds: question.KnowledgeIds,
+			Score:        question.Score,
+			UpdateTime:   question.UpdateTime,
+			Memo:         question.Memo,
+		}
+		_, err = o.Insert(&paperQuestion)
+		if err != nil {
+			o.Rollback()
+			return
+		}
+		if optionList, ok := optionMap[question.ID]; ok {
+			for _, option := range optionList {
+				paperQuestionOptionList = append(paperQuestionOptionList, &PaperQuestionOption{
+					ID:         0,
+					QuestionID: paperQuestion.ID,
+					Tag:        option.Tag,
+					Content:    option.Content,
+					IsRight:    option.IsRight,
+					Memo:       option.Memo,
+				})
+			}
+		}
+	}
+	_, err = o.InsertMulti(100, paperQuestionOptionList)
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	err = o.Commit()
+	return
+}
+
+// 智能组卷试卷
+func InsertPaperOneWithQuestionListV2(m Paper, list []*Question) (id int64, err error) {
+	o := orm.NewOrm()
+
+	// 查询试卷试题
+	var qidl = make([]int, 0)
+	for _, v := range list {
+		qidl = append(qidl, v.ID)
+	}
+	var optionList = make([]*QuestionOption, 0)
+	var optionMap = make(map[int][]*QuestionOption, 0)
+	_, err = o.Raw(fmt.Sprintf("SELECT * FROM question_option WHERE question_id IN (?%s)", strings.Repeat(", ?", len(qidl)-1)), qidl).QueryRows(&optionList)
+	if err != nil {
+		return
+	}
+	for _, v := range optionList {
+		if _, ok := optionMap[v.QuestionID]; !ok {
+			optionMap[v.QuestionID] = []*QuestionOption{v}
+		} else {
+			optionMap[v.QuestionID] = append(optionMap[v.QuestionID], v)
+		}
+	}
+
+	err = o.Begin()
+	if err != nil {
+		return
+	}
+
+	// 保存试卷
+	m.Status = PAPER_EDIT
+	m.CreateTime = time.Now().Unix()
+	id, err = o.Insert(&m)
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 保存试题
+	var paperQuestionOptionList = make([]*PaperQuestionOption, 0)
+	for _, qid := range qidl {
+		var rawResult sql.Result
+		rawResult, err = o.Raw("INSERT INTO paper_question (`paper_id`, `origin_id`, `subject_id`, `name`, `type`, `content`, `tips`, `analysis`, `difficulty`, `knowledge_ids`, `score`, `update_time`, `memo`)"+
+			" SELECT ?, ?, T0.`subject_id`, T0.`name`, T0.`type`, T0.`content`, T0.`tips`, T0.`analysis`, T0.`difficulty`, T0.`knowledge_ids`, T0.`score`, T0.`update_time`, T0.`memo` FROM question AS T0"+
+			" WHERE id = ?", m.ID, qid, qid).Exec()
+		if err != nil {
+			o.Rollback()
+			return
+		}
+		var newID int64
+		newID, err = rawResult.LastInsertId()
+		if err != nil {
+			o.Rollback()
+			return
+		}
+		if optionList, ok := optionMap[qid]; ok {
+			for _, option := range optionList {
+				paperQuestionOptionList = append(paperQuestionOptionList, &PaperQuestionOption{
+					ID:         0,
+					QuestionID: int(newID),
+					Tag:        option.Tag,
+					Content:    option.Content,
+					IsRight:    option.IsRight,
+					Memo:       option.Memo,
+				})
+			}
+		}
+	}
+	_, err = o.InsertMulti(100, paperQuestionOptionList)
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	err = o.Commit()
 	return
 }

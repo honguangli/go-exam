@@ -43,7 +43,7 @@ func init() {
 			beego.NSNamespace("/paper",
 				beego.NSRouter("/list", &controllers.PaperController{}, "Post:List"),
 				beego.NSRouter("/detail", &controllers.PaperController{}, "Post:Detail"),
-				beego.NSRouter("/auto", &controllers.PaperController{}, "Post:Auto"),
+				beego.NSRouter("/gen", &controllers.PaperController{}, "Post:Auto"),
 				beego.NSRouter("/create", &controllers.PaperController{}, "Post:Create"),
 				beego.NSRouter("/update", &controllers.PaperController{}, "Post:Update"),
 				beego.NSRouter("/delete", &controllers.PaperController{}, "Post:Delete"),

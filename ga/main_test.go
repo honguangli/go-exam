@@ -3,8 +3,10 @@ package ga
 import (
 	"encoding/json"
 	"fmt"
-	"math"
+	"go-exam/models"
 	"math/rand"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -12,28 +14,32 @@ import (
 func TestGenQuestionList(t *testing.T) {
 	var maxPointId = 30
 
-	var list = make([]*Question, 0)
+	var list = make([]*models.Question, 0)
 
 	// 生成试题数量 v0: 最小题量 v1：最大题量 v2：当前题量
 	var ms = map[int][]int{
-		QUESTION_CHOICE_SINGLE: []int{1200},
-		QUESTION_CHOICE_MULTI:  []int{1000},
-		QUESTION_JUDGE:         []int{800},
-		QUESTION_BLANK_SINGLE:  []int{600},
-		QUESTION_BLANK_MULTI:   []int{500},
-		QUESTION_ANSWER:        []int{300},
-		QUESTION_ANSWER_MULTI:  []int{100},
+		models.QUESTION_CHOICE_SINGLE: []int{1200},
+		models.QUESTION_CHOICE_MULTI:  []int{1000},
+		models.QUESTION_JUDGE:         []int{800},
+		models.QUESTION_BLANK_SINGLE:  []int{600},
+		models.QUESTION_BLANK_MULTI:   []int{500},
+		models.QUESTION_ANSWER:        []int{300},
+		models.QUESTION_ANSWER_MULTI:  []int{100},
 	}
 
 	rand.Seed(time.Now().UnixNano())
 	for k, v := range ms {
 		for i := 0; i < v[0]; i++ {
-			var points = rand.Perm(maxPointId)
-			list = append(list, &Question{
-				ID:         0,                                      // id
-				Type:       k,                                      // 题目类型
-				Difficulty: float64(int(rand.Float64()*100)) / 100, // 难度系数
-				Points:     points[:rand.Intn(3)+1],                // 知识点
+			var randInts = rand.Perm(maxPointId)
+			var points = make([]string, 0)
+			for _, vv := range randInts[:rand.Intn(3)+1] {
+				points = append(points, strconv.Itoa(vv))
+			}
+			list = append(list, &models.Question{
+				ID:           0,                                      // id
+				Type:         k,                                      // 题目类型
+				Difficulty:   float64(int(rand.Float64()*100)) / 100, // 难度系数
+				KnowledgeIds: strings.Join(points, ","),              // 知识点
 			})
 		}
 	}
@@ -51,7 +57,7 @@ func TestGenQuestionList(t *testing.T) {
 func TestGA(t *testing.T) {
 	// 创建规则
 	var rule = Rule{
-		Size:              50,                                           // 初始种群大小
+		Size:              10,                                           // 初始种群大小
 		MutationRate:      0.085,                                        // 变异概率
 		Elitism:           true,                                         // 精英主义
 		Score:             100,                                          // 试卷总分
@@ -119,16 +125,16 @@ func TestGA(t *testing.T) {
 		fmt.Printf("paper: %s\n", string(bf))
 	}
 
-	paper.SetDifficulty()
-	paper.SetKpCoverage(rule.Points)
-	paper.SetAdaptationDegree(rule.Difficulty, rule.PointsWeight, rule.DifficultyWeight)
-	bf, err = json.Marshal(paper)
-	if err != nil {
-		fmt.Printf("json marshal error: %s", err.Error())
-	} else {
-		fmt.Printf("paper: %s\n", string(bf))
-	}
-
-	fmt.Printf("d1 = %f\n", 1-(1-paper.KPCoverage)*rule.PointsWeight-math.Abs(rule.Difficulty-paper.Difficulty)*rule.DifficultyWeight)
-	fmt.Printf("d2 = %f\n", 1/(1-(1-paper.KPCoverage)*rule.PointsWeight-math.Abs(rule.Difficulty-paper.Difficulty)*rule.DifficultyWeight))
+	//paper.SetDifficulty()
+	//paper.SetKpCoverage(rule.Points)
+	//paper.SetAdaptationDegree(rule.Difficulty, rule.PointsWeight, rule.DifficultyWeight)
+	//bf, err = json.Marshal(paper)
+	//if err != nil {
+	//	fmt.Printf("json marshal error: %s", err.Error())
+	//} else {
+	//	fmt.Printf("paper: %s\n", string(bf))
+	//}
+	//
+	//fmt.Printf("d1 = %f\n", 1-(1-paper.KPCoverage)*rule.PointsWeight-math.Abs(rule.Difficulty-paper.Difficulty)*rule.DifficultyWeight)
+	//fmt.Printf("d2 = %f\n", 1/(1-(1-paper.KPCoverage)*rule.PointsWeight-math.Abs(rule.Difficulty-paper.Difficulty)*rule.DifficultyWeight))
 }

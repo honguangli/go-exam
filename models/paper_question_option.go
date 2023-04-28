@@ -7,7 +7,12 @@ import (
 
 // 试卷试题选项表
 type PaperQuestionOption struct {
-	ID int `orm:"column(id)" form:"id" json:"id"`
+	ID         int    `orm:"column(id)" form:"id" json:"id"`
+	QuestionID int    `orm:"column(question_id)" form:"question_id" json:"question_id"`
+	Tag        string `orm:"column(tag)" form:"tag" json:"tag"`
+	Content    string `orm:"column(content)" form:"content" json:"content"`
+	IsRight    int    `orm:"column(is_right)" form:"is_right" json:"is_right"`
+	Memo       string `orm:"column(memo)" form:"memo" json:"memo"`
 }
 
 // 查询列表参数
@@ -97,7 +102,7 @@ func ReadPaperQuestionOptionListRaw(param ReadPaperQuestionOptionListParam) (lis
 	}
 
 	// 查询字段
-	var fields = "T0.`id`"
+	var fields = "T0.`id`, T0.`question_id`, T0.`tag`, T0.`content`, T0.`is_right`, T0.`memo`"
 
 	// 关联查询
 	var relatedSql string
@@ -145,7 +150,7 @@ func InsertPaperQuestionOptionMulti(list []PaperQuestionOption) (num int64, err 
 func UpdatePaperQuestionOptionOne(m PaperQuestionOption, fields ...string) (num int64, err error) {
 	o := orm.NewOrm()
 	if len(fields) == 0 {
-		fields = []string{""}
+		fields = []string{"question_id", "tag", "content", "is_right", "memo"}
 	}
 	num, err = o.Update(&m, fields...)
 	return

@@ -3,6 +3,8 @@ package models
 import (
 	"fmt"
 	"github.com/astaxie/beego/orm"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -58,6 +60,18 @@ type ReadQuestionListParam struct {
 	Type      int    `json:"type"`
 	Status    int    `json:"status"`
 	ClosePage bool   `form:"close_page" json:"close_page"`
+}
+
+// 查询列表参数 简化版
+type ReadQuestionSimpleListParam struct {
+	BaseQueryParam
+	SubjectID       int    `json:"subject_id"`
+	Name            string `json:"name"`
+	Type            int    `json:"type"`
+	Status          int    `json:"status"`
+	KnowledgeIDList []int  `json:"knowledge_id_list"`
+	ExcludeIDList   []int  `json:"exclude_id_list"`
+	ClosePage       bool   `form:"close_page" json:"close_page"`
 }
 
 // 创建参数
@@ -121,22 +135,6 @@ func ReadQuestionList(param ReadQuestionListParam) (list []*Question, total int6
 	list = make([]*Question, 0)
 	query := orm.NewOrm().QueryTable(QuestionTBName())
 
-	if param.SubjectID > 0 {
-		query = query.Filter("subject_id", param.SubjectID)
-	}
-
-	if len(param.Name) > 0 {
-		query = query.Filter("name__icontains", param.Name)
-	}
-
-	if param.Type != QUESTION_TYPE_IGNORE {
-		query = query.Filter("type", param.Type)
-	}
-
-	if param.Status != QUESTION_STATUS_IGNORE {
-		query = query.Filter("status", param.Status)
-	}
-
 	sortOrder := "id"
 	switch param.Sort {
 	}
@@ -157,6 +155,26 @@ func ReadQuestionListRaw(param ReadQuestionListParam) (list []*Question, total i
 	list = make([]*Question, 0)
 	var args = make([]interface{}, 0)
 	var whereSql = "WHERE 1=1"
+
+	if param.SubjectID > 0 {
+		whereSql += " AND T0.subject_id = ?"
+		args = append(args, param.SubjectID)
+	}
+
+	if len(param.Name) > 0 {
+		whereSql += " AND T0.name LIKE ?"
+		args = append(args, fmt.Sprintf("%%%s%%", param.Name))
+	}
+
+	if param.Type != QUESTION_TYPE_IGNORE {
+		whereSql += " AND T0.type = ?"
+		args = append(args, param.Type)
+	}
+
+	if param.Status != QUESTION_STATUS_IGNORE {
+		whereSql += " AND T0.status = ?"
+		args = append(args, param.Status)
+	}
 
 	// 排序
 	var orderSql = "ORDER BY "
@@ -202,6 +220,70 @@ func ReadQuestionListRaw(param ReadQuestionListParam) (list []*Question, total i
 		return
 	}
 	total = count.Count
+	return
+}
+
+// 查询多个对象
+func ReadQuestionSimpleListRaw(param ReadQuestionSimpleListParam) (list []*Question, total int64, err error) {
+	list = make([]*Question, 0)
+	var args = make([]interface{}, 0)
+	var whereSql = "WHERE 1=1"
+
+	if param.SubjectID > 0 {
+		whereSql += " AND T0.subject_id = ?"
+		args = append(args, param.SubjectID)
+	}
+
+	if len(param.Name) > 0 {
+		whereSql += " AND T0.name LIKE ?"
+		args = append(args, fmt.Sprintf("%%%s%%", param.Name))
+	}
+
+	if param.Type != QUESTION_TYPE_IGNORE {
+		whereSql += " AND T0.type = ?"
+		args = append(args, param.Type)
+	}
+
+	if param.Status != QUESTION_STATUS_IGNORE {
+		whereSql += " AND T0.status = ?"
+		args = append(args, param.Status)
+	}
+
+	if len(param.ExcludeIDList) > 0 {
+		whereSql += fmt.Sprintf(" AND T0.id NOT IN (?%s)", strings.Repeat(", ?", len(param.ExcludeIDList)-1))
+		args = append(args, param.ExcludeIDList)
+	}
+
+	if len(param.KnowledgeIDList) > 0 {
+		whereSql += fmt.Sprintf(" AND (FIND_IN_SET(?, T0.knowledge_ids)%s)", strings.Repeat(" OR FIND_IN_SET(?, T0.knowledge_ids)", len(param.KnowledgeIDList)-1))
+		for _, v := range param.KnowledgeIDList {
+			args = append(args, strconv.Itoa(v))
+		}
+	}
+
+	// 排序
+	var orderSql = "ORDER BY RAND()"
+
+	// 分页
+	var pageSql string
+	if !param.ClosePage {
+		pageSql = fmt.Sprintf("LIMIT %d OFFSET %d", param.Limit, param.Offset)
+	}
+
+	// 查询字段
+	var fields = "T0.`id`, T0.`subject_id`, T0.`type`, T0.`difficulty`, T0.`knowledge_ids`"
+
+	// 关联查询
+	var relatedSql string
+
+	// 连表查询
+	var sql = fmt.Sprintf("SELECT %s FROM question AS T0 %s %s %s %s", fields, relatedSql, whereSql, orderSql, pageSql)
+
+	// 查询列表
+	total, err = orm.NewOrm().Raw(sql, args...).QueryRows(&list)
+	if err != nil {
+		return
+	}
 	return
 }
 

@@ -2,6 +2,7 @@ package ga
 
 import (
 	"fmt"
+	"go-exam/models"
 	"math/rand"
 	"time"
 )
@@ -120,7 +121,7 @@ func (m *Population) Select() *Paper {
 // 交叉算子
 func (m *Population) Crossover(p1, p2 *Paper) (*Paper, error) {
 	var paper = new(Paper)
-	paper.QuestionList = make([]*Question, len(p1.QuestionList))
+	paper.QuestionList = make([]*models.Question, len(p1.QuestionList))
 
 	// 随机设置两个交叉点
 	a := m.Rand.Intn(len(paper.QuestionList))
@@ -147,12 +148,17 @@ func (m *Population) Crossover(p1, p2 *Paper) (*Paper, error) {
 		}
 
 		// 重新获取试题
-		list, _, err := QueryQuestionList(QueryQuestionListParam{
-			Type:    p2.QuestionList[i].Type,
-			Points:  m.Rule.Points,
-			Exclude: paper.GetQuestionIDList(),
-			Limit:   1,
+		list, _, err := models.ReadQuestionSimpleListRaw(models.ReadQuestionSimpleListParam{
+			SubjectID:       m.Rule.SubjectID,
+			Type:            p2.QuestionList[i].Type,
+			Status:          models.QUESTION_ENABLE,
+			KnowledgeIDList: m.Rule.Points,
+			ExcludeIDList:   paper.GetQuestionIDList(),
+			BaseQueryParam: models.BaseQueryParam{
+				Limit: 1,
+			},
 		})
+
 		if err != nil {
 			fmt.Printf("获取试题失败: %s\n", err.Error())
 			return nil, err
@@ -172,11 +178,15 @@ func (m *Population) Mutation(paper *Paper) error {
 	for k, v := range paper.QuestionList {
 		if m.Rand.Float64() < m.Rule.MutationRate {
 			// 从题库中重新抽题
-			list, _, err := QueryQuestionList(QueryQuestionListParam{
-				Type:    v.Type,
-				Points:  m.Rule.Points,
-				Exclude: paper.GetQuestionIDList(),
-				Limit:   1,
+			list, _, err := models.ReadQuestionSimpleListRaw(models.ReadQuestionSimpleListParam{
+				SubjectID:       m.Rule.SubjectID,
+				Type:            v.Type,
+				Status:          models.QUESTION_ENABLE,
+				KnowledgeIDList: m.Rule.Points,
+				ExcludeIDList:   paper.GetQuestionIDList(),
+				BaseQueryParam: models.BaseQueryParam{
+					Limit: 1,
+				},
 			})
 			if err != nil {
 				return err

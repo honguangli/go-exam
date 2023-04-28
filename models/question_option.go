@@ -11,7 +11,7 @@ type QuestionOption struct {
 	QuestionID int    `orm:"column(question_id)" form:"question_id" json:"question_id"`
 	Tag        string `orm:"column(tag)" form:"tag" json:"tag"`
 	Content    string `orm:"column(content)" form:"content" json:"content"`
-	IsRight    int8   `orm:"column(is_right)" form:"is_right" json:"is_right"`
+	IsRight    int    `orm:"column(is_right)" form:"is_right" json:"is_right"`
 	Memo       string `orm:"column(memo)" form:"memo" json:"memo"`
 }
 

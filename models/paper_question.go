@@ -7,7 +7,20 @@ import (
 
 // 试卷试题表
 type PaperQuestion struct {
-	ID int `orm:"column(id)" form:"id" json:"id"`
+	ID           int     `orm:"column(id)" form:"id" json:"id"`
+	PaperID      int     `orm:"column(paper_id)" form:"paper_id" json:"paper_id"`
+	OriginID     int     `orm:"column(origin_id)" form:"origin_id" json:"origin_id"`
+	SubjectID    int     `orm:"column(subject_id)" form:"subject_id" json:"subject_id"`
+	Name         string  `orm:"column(name)" form:"name" json:"name"`
+	Type         int     `orm:"column(type)" form:"type" json:"type"`
+	Content      string  `orm:"column(content)" form:"content" json:"content"`
+	Tips         string  `orm:"column(tips)" form:"tips" json:"tips"`
+	Analysis     string  `orm:"column(analysis)" form:"analysis" json:"analysis"`
+	Difficulty   float64 `orm:"column(difficulty)" form:"difficulty" json:"difficulty"`
+	KnowledgeIds string  `orm:"column(knowledge_ids)" form:"knowledge_ids" json:"knowledge_ids"`
+	Score        int     `orm:"column(score)" form:"score" json:"score"`
+	UpdateTime   int64   `orm:"column(update_time)" form:"update_time" json:"update_time"`
+	Memo         string  `orm:"column(memo)" form:"memo" json:"memo"`
 }
 
 // 查询列表参数
@@ -33,7 +46,10 @@ func (m *PaperQuestion) TableName() (name string) {
 
 // 多字段索引
 func (m *PaperQuestion) TableIndex() [][]string {
-	return [][]string{}
+	return [][]string{
+		{"subject_id"},
+		{"type"},
+	}
 }
 
 // 多字段唯一键
@@ -97,7 +113,7 @@ func ReadPaperQuestionListRaw(param ReadPaperQuestionListParam) (list []*PaperQu
 	}
 
 	// 查询字段
-	var fields = "T0.`id`"
+	var fields = "T0.`id`, T0.`paper_id`, T0.`origin_id`, T0.`subject_id`, T0.`name`, T0.`type`, T0.`content`, T0.`tips`, T0.`analysis`, T0.`difficulty`, T0.`knowledge_ids`, T0.`score`, T0.`update_time`, T0.`memo`"
 
 	// 关联查询
 	var relatedSql string
@@ -145,7 +161,7 @@ func InsertPaperQuestionMulti(list []PaperQuestion) (num int64, err error) {
 func UpdatePaperQuestionOne(m PaperQuestion, fields ...string) (num int64, err error) {
 	o := orm.NewOrm()
 	if len(fields) == 0 {
-		fields = []string{""}
+		fields = []string{"paper_id", "origin_id", "subject_id", "name", "type", "content", "tips", "analysis", "difficulty", "knowledge_ids", "score", "update_time", "memo"}
 	}
 	num, err = o.Update(&m, fields...)
 	return

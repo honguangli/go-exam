@@ -2,16 +2,19 @@ package ga
 
 import (
 	"fmt"
+	"go-exam/models"
 	"math"
+	"strconv"
+	"strings"
 )
 
 // 试卷
 type Paper struct {
-	Score            int         // 总分
-	Difficulty       float64     // 难度系数
-	KPCoverage       float64     // 知识点覆盖率
-	AdaptationDegree float64     // 适应度
-	QuestionList     []*Question // 试题列表
+	Score            int                // 总分
+	Difficulty       float64            // 难度系数
+	KPCoverage       float64            // 知识点覆盖率
+	AdaptationDegree float64            // 适应度
+	QuestionList     []*models.Question // 试题列表
 }
 
 // 生成试卷
@@ -20,10 +23,15 @@ func NewPaper(rule *Rule) (paper *Paper, err error) {
 
 	// 单选题
 	if rule.ChoiceSingleNum > 0 {
-		list, _, err := QueryQuestionList(QueryQuestionListParam{
-			Type:   QUESTION_CHOICE_SINGLE,
-			Points: rule.Points,
-			Limit:  rule.ChoiceSingleNum,
+		list, _, err := models.ReadQuestionSimpleListRaw(models.ReadQuestionSimpleListParam{
+			SubjectID:       rule.SubjectID,
+			Type:            models.QUESTION_CHOICE_SINGLE,
+			Status:          models.QUESTION_ENABLE,
+			KnowledgeIDList: rule.Points,
+			ExcludeIDList:   nil,
+			BaseQueryParam: models.BaseQueryParam{
+				Limit: rule.ChoiceSingleNum,
+			},
 		})
 		if err != nil {
 			return nil, err
@@ -39,10 +47,15 @@ func NewPaper(rule *Rule) (paper *Paper, err error) {
 
 	// 多选题
 	if rule.ChoiceMultiNum > 0 {
-		list, _, err := QueryQuestionList(QueryQuestionListParam{
-			Type:   QUESTION_CHOICE_MULTI,
-			Points: rule.Points,
-			Limit:  rule.ChoiceMultiNum,
+		list, _, err := models.ReadQuestionSimpleListRaw(models.ReadQuestionSimpleListParam{
+			SubjectID:       rule.SubjectID,
+			Type:            models.QUESTION_CHOICE_MULTI,
+			Status:          models.QUESTION_ENABLE,
+			KnowledgeIDList: rule.Points,
+			ExcludeIDList:   nil,
+			BaseQueryParam: models.BaseQueryParam{
+				Limit: rule.ChoiceMultiNum,
+			},
 		})
 		if err != nil {
 			return nil, err
@@ -58,10 +71,15 @@ func NewPaper(rule *Rule) (paper *Paper, err error) {
 
 	// 判断题
 	if rule.JudgeNum > 0 {
-		list, _, err := QueryQuestionList(QueryQuestionListParam{
-			Type:   QUESTION_JUDGE,
-			Points: rule.Points,
-			Limit:  rule.JudgeNum,
+		list, _, err := models.ReadQuestionSimpleListRaw(models.ReadQuestionSimpleListParam{
+			SubjectID:       rule.SubjectID,
+			Type:            models.QUESTION_JUDGE,
+			Status:          models.QUESTION_ENABLE,
+			KnowledgeIDList: rule.Points,
+			ExcludeIDList:   nil,
+			BaseQueryParam: models.BaseQueryParam{
+				Limit: rule.JudgeNum,
+			},
 		})
 		if err != nil {
 			return nil, err
@@ -77,10 +95,15 @@ func NewPaper(rule *Rule) (paper *Paper, err error) {
 
 	// 填空题
 	if rule.BlankSingleNum > 0 {
-		list, _, err := QueryQuestionList(QueryQuestionListParam{
-			Type:   QUESTION_BLANK_SINGLE,
-			Points: rule.Points,
-			Limit:  rule.BlankSingleNum,
+		list, _, err := models.ReadQuestionSimpleListRaw(models.ReadQuestionSimpleListParam{
+			SubjectID:       rule.SubjectID,
+			Type:            models.QUESTION_BLANK_SINGLE,
+			Status:          models.QUESTION_ENABLE,
+			KnowledgeIDList: rule.Points,
+			ExcludeIDList:   nil,
+			BaseQueryParam: models.BaseQueryParam{
+				Limit: rule.BlankSingleNum,
+			},
 		})
 		if err != nil {
 			return nil, err
@@ -96,10 +119,15 @@ func NewPaper(rule *Rule) (paper *Paper, err error) {
 
 	// 多项填空题
 	if rule.BlankMultiNum > 0 {
-		list, _, err := QueryQuestionList(QueryQuestionListParam{
-			Type:   QUESTION_BLANK_MULTI,
-			Points: rule.Points,
-			Limit:  rule.BlankMultiNum,
+		list, _, err := models.ReadQuestionSimpleListRaw(models.ReadQuestionSimpleListParam{
+			SubjectID:       rule.SubjectID,
+			Type:            models.QUESTION_BLANK_MULTI,
+			Status:          models.QUESTION_ENABLE,
+			KnowledgeIDList: rule.Points,
+			ExcludeIDList:   nil,
+			BaseQueryParam: models.BaseQueryParam{
+				Limit: rule.BlankMultiNum,
+			},
 		})
 		if err != nil {
 			return nil, err
@@ -115,10 +143,15 @@ func NewPaper(rule *Rule) (paper *Paper, err error) {
 
 	// 简答题
 	if rule.AnswerSingleNum > 0 {
-		list, _, err := QueryQuestionList(QueryQuestionListParam{
-			Type:   QUESTION_ANSWER,
-			Points: rule.Points,
-			Limit:  rule.AnswerSingleNum,
+		list, _, err := models.ReadQuestionSimpleListRaw(models.ReadQuestionSimpleListParam{
+			SubjectID:       rule.SubjectID,
+			Type:            models.QUESTION_ANSWER,
+			Status:          models.QUESTION_ENABLE,
+			KnowledgeIDList: rule.Points,
+			ExcludeIDList:   nil,
+			BaseQueryParam: models.BaseQueryParam{
+				Limit: rule.AnswerSingleNum,
+			},
 		})
 		if err != nil {
 			return nil, err
@@ -134,10 +167,15 @@ func NewPaper(rule *Rule) (paper *Paper, err error) {
 
 	// 多项简答题
 	if rule.AnswerMultiNum > 0 {
-		list, _, err := QueryQuestionList(QueryQuestionListParam{
-			Type:   QUESTION_ANSWER_MULTI,
-			Points: rule.Points,
-			Limit:  rule.AnswerMultiNum,
+		list, _, err := models.ReadQuestionSimpleListRaw(models.ReadQuestionSimpleListParam{
+			SubjectID:       rule.SubjectID,
+			Type:            models.QUESTION_ANSWER_MULTI,
+			Status:          models.QUESTION_ENABLE,
+			KnowledgeIDList: rule.Points,
+			ExcludeIDList:   nil,
+			BaseQueryParam: models.BaseQueryParam{
+				Limit: rule.AnswerMultiNum,
+			},
 		})
 		if len(list) != rule.AnswerMultiNum {
 			return nil, fmt.Errorf("多项简答题不足，组卷失败")
@@ -196,14 +234,14 @@ func (m *Paper) SetDifficulty() {
 // 计算试卷知识点覆盖率
 // 计算公式：所有试题包含知识点除以期望包含的知识点
 func (m *Paper) SetKpCoverage(points []int) {
-	var mp = make(map[int]byte)
+	var mp = make(map[string]byte)
 	for _, v := range points {
-		mp[v] = 0
+		mp[strconv.Itoa(v)] = 0
 	}
 
 	var total int
 	for _, v := range m.QuestionList {
-		for _, id := range v.Points {
+		for _, id := range strings.Split(v.KnowledgeIds, ",") {
 			if c, ok := mp[id]; ok && c == 0 {
 				mp[id] = 1
 				total++
