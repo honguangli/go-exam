@@ -228,7 +228,7 @@ func (m *Paper) SetDifficulty() {
 	for _, v := range m.QuestionList {
 		totalDifficulty += float64(v.Score) * v.Difficulty
 	}
-	m.Difficulty = totalDifficulty / float64(m.Score)
+	m.Difficulty = math.Round(totalDifficulty/float64(m.Score)*1000) / 1000
 }
 
 // 计算试卷知识点覆盖率
@@ -248,54 +248,13 @@ func (m *Paper) SetKpCoverage(points []int) {
 			}
 		}
 	}
-	m.KPCoverage = float64(total) / float64(len(points))
+	m.KPCoverage = math.Round(float64(total)/float64(len(points))*1000) / 1000
 }
 
 // 计算试卷适应度
-// 公式为：f=1-(1-M/N)*f1-|EP-P|*f2
-// 其中M/N为知识点覆盖率，EP为期望难度系数，P为种群个体难度系数，
 // f1为知识点分布的权重，f2为难度系数所占权重。
 // 当f1=0时退化为只限制试题难度系数，当f2=0时退化为只限制知识点分布
 func (m *Paper) SetAdaptationDegree(difficulty float64, f1 float64, f2 float64) {
-	m.AdaptationDegree = 1 - (1-m.KPCoverage)*f1 - math.Abs(difficulty-m.Difficulty)*f2
+	m.AdaptationDegree = 1 / (1 + (1-m.KPCoverage)*f1 + math.Abs(difficulty-m.Difficulty)*f2)
 	return
 }
-
-//// 计算试卷难度系数
-//// 计算公式：每题难度 * 分数求和除以总分
-//func (m *Paper) GetDifficulty() float64 {
-//	var totalDifficulty float64
-//	for _, v := range m.QuestionList {
-//		totalDifficulty += float64(v.Score) * v.Difficulty
-//	}
-//	return totalDifficulty / float64(m.Score)
-//}
-//
-//// 计算试卷知识点覆盖率
-//// 计算公式：所有试题包含知识点除以期望包含的知识点
-//func (m *Paper) GetKpCoverage(points []int) float64 {
-//	var mp = make(map[int]byte)
-//	for _, v := range points {
-//		mp[v] = 0
-//	}
-//
-//	var total int
-//	for _, v := range m.QuestionList {
-//		for _, id := range v.Points {
-//			if c, ok := mp[id]; ok && c == 0 {
-//				mp[id] = 1
-//				total++
-//			}
-//		}
-//	}
-//	return float64(total) / float64(len(points))
-//}
-//
-//// 计算试卷适应度
-//// 公式为：f=1-(1-M/N)*f1-|EP-P|*f2
-//// 其中M/N为知识点覆盖率，EP为期望难度系数，P为种群个体难度系数，
-//// f1为知识点分布的权重，f2为难度系数所占权重。
-//// 当f1=0时退化为只限制试题难度系数，当f2=0时退化为只限制知识点分布
-//func (m *Paper) GetAdaptationDegree(difficulty float64, f1 float64, f2 float64) float64 {
-//	return 1 - (1-m.KPCoverage)*f1 - math.Abs(difficulty-m.Difficulty)*f2
-//}

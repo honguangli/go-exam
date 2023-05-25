@@ -63,7 +63,6 @@ func (m *Population) Evolve() error {
 
 		paper, err := m.Crossover(p1, p2)
 		if err != nil {
-			fmt.Printf("交叉失败: %s\n", err.Error())
 			return err
 		}
 		papers[i] = paper
@@ -73,7 +72,6 @@ func (m *Population) Evolve() error {
 	for i := offset; i < len(papers); i++ {
 		err := m.Mutation(papers[i])
 		if err != nil {
-			fmt.Printf("变异失败: %s\n", err.Error())
 			return err
 		}
 		papers[i].Score = m.Rule.Score
@@ -158,9 +156,7 @@ func (m *Population) Crossover(p1, p2 *Paper) (*Paper, error) {
 				Limit: 1,
 			},
 		})
-
 		if err != nil {
-			fmt.Printf("获取试题失败: %s\n", err.Error())
 			return nil, err
 		}
 		if len(list) == 0 {

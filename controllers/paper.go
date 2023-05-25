@@ -73,7 +73,7 @@ func (c *PaperController) Auto() {
 		c.Failure("参数错误")
 	}
 
-	var startTime = time.Now()
+	//var startTime = time.Now()
 	p, err := c.genPaper(&m)
 	if err != nil {
 		logs.Info("c[Paper][Auto]: 创建失败, err = %s", err.Error())
@@ -85,7 +85,7 @@ func (c *PaperController) Auto() {
 		logs.Info("c[Paper][Auto]: 创建失败, err = %s", err.Error())
 		c.Failure("操作失败")
 	}
-	logs.Info("总耗时：%v", time.Now().Sub(startTime))
+	//logs.Info("总耗时：%v", time.Now().Sub(startTime))
 
 	// 调用组卷算法获取试题列表
 
@@ -282,7 +282,8 @@ func (c *PaperController) genPaper(param *models.Paper) (*ga.Paper, error) {
 		//}
 	}
 	logs.Info("组卷耗时：%v", time.Now().Sub(startTime))
-	logs.Info("进化完成: 适应度：%f", paper.AdaptationDegree)
+	logs.Info("进化完成: 适应度 = %f | 难度 = %f | 知识点覆盖率 = %f", paper.AdaptationDegree, paper.Difficulty, paper.KPCoverage)
+
 	bf, err := json.Marshal(paper)
 	if err != nil {
 		logs.Info("json marshal error: %s", err.Error())
