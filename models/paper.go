@@ -127,6 +127,21 @@ func ReadPaperListRaw(param ReadPaperListParam) (list []*Paper, total int64, err
 	var args = make([]interface{}, 0)
 	var whereSql = "WHERE 1=1"
 
+	if param.SubjectID > 0 {
+		whereSql += " AND T0.`subject_id` = ?"
+		args = append(args, param.SubjectID)
+	}
+
+	if len(param.Name) > 0 {
+		whereSql += " AND T0.`name` LIKE ?"
+		args = append(args, fmt.Sprintf("%%%s%%", param.Name))
+	}
+
+	//if param.Status >= 0 {
+	//	whereSql += " AND T0.`status` = ?"
+	//	args = append(args, param.Status)
+	//}
+
 	// 排序
 	var orderSql = "ORDER BY "
 	switch param.Sort {

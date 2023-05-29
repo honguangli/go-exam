@@ -21,6 +21,25 @@ type Plan struct {
 	Memo        string `orm:"column(memo)" form:"memo" json:"memo"`
 }
 
+// 考试计划表 关联
+type PlanRel struct {
+	ID          int    `orm:"column(id)" form:"id" json:"id"`
+	Name        string `orm:"column(name)" form:"name" json:"name"`
+	PaperID     int    `orm:"column(paper_id)" form:"paper_id" json:"paper_id"`
+	StartTime   int    `orm:"column(start_time)" form:"start_time" json:"start_time"`
+	EndTime     int    `orm:"column(end_time)" form:"end_time" json:"end_time"`
+	Duration    int    `orm:"column(duration)" form:"duration" json:"duration"`
+	PublishTime int    `orm:"column(publish_time)" form:"publish_time" json:"publish_time"`
+	Status      int    `orm:"column(status)" form:"status" json:"status"`
+	QueryGrade  int8   `orm:"column(query_grade)" form:"query_grade" json:"query_grade"`
+	CreateTime  int64  `orm:"column(create_time)" form:"create_time" json:"create_time"`
+	UpdateTime  int64  `orm:"column(update_time)" form:"update_time" json:"update_time"`
+	Memo        string `orm:"column(memo)" form:"memo" json:"memo"`
+
+	// 试卷信息
+	PaperName string `orm:"column(paper_name)" form:"paper_name" json:"paper_name"`
+}
+
 // 查询详情参数
 type ReadPlanDetailParam struct {
 	ID int `json:"id"`
@@ -78,6 +97,14 @@ func ReadPlanOne(id int) (m Plan, err error) {
 	return
 }
 
+// 查询单个对象
+func ReadPlanRelOne(id int) (m PlanRel, err error) {
+	o := orm.NewOrm()
+	m.ID = id
+	err = o.Read(&m)
+	return
+}
+
 // 查询多个对象
 func ReadPlanList(param ReadPlanListParam) (list []*Plan, total int64, err error) {
 	list = make([]*Plan, 0)
@@ -125,6 +152,65 @@ func ReadPlanListRaw(param ReadPlanListParam) (list []*Plan, total int64, err er
 
 	// 关联查询
 	var relatedSql string
+
+	// 连表查询
+	var sql = fmt.Sprintf("SELECT %s FROM plan AS T0 %s %s %s %s", fields, relatedSql, whereSql, orderSql, pageSql)
+
+	// 查询列表
+	total, err = orm.NewOrm().Raw(sql, args...).QueryRows(&list)
+	if err != nil {
+		return
+	}
+
+	// 关闭分页时不查询count
+	if param.ClosePage {
+		return
+	}
+
+	// 查询总数
+	var countSql = fmt.Sprintf("SELECT count(*) AS count FROM plan AS T0 %s %s", relatedSql, whereSql)
+	var count RawCount
+	err = orm.NewOrm().Raw(countSql, args...).QueryRow(&count)
+	if err != nil {
+		return
+	}
+	total = count.Count
+	return
+}
+
+// 查询多个对象
+func ReadPlanRelListRaw(param ReadPlanListParam) (list []*PlanRel, total int64, err error) {
+	list = make([]*PlanRel, 0)
+	var args = make([]interface{}, 0)
+	var whereSql = "WHERE 1=1"
+
+	if len(param.Name) > 0 {
+		whereSql += " AND T0.`name` LIKE ?"
+		args = append(args, fmt.Sprintf("%%%s%%", param.Name))
+	}
+
+	// 排序
+	var orderSql = "ORDER BY "
+	switch param.Sort {
+	default:
+		orderSql += "T0.id"
+	}
+	if param.Order == "desc" {
+		orderSql += " DESC"
+	}
+
+	// 分页
+	var pageSql string
+	if !param.ClosePage {
+		pageSql = fmt.Sprintf("LIMIT %d OFFSET %d", param.Limit, param.Offset)
+	}
+
+	// 查询字段
+	var fields = "T0.`id`, T0.`name`, T0.`paper_id`, T0.`start_time`, T0.`end_time`, T0.`duration`, T0.`publish_time`, T0.`status`, T0.`query_grade`, T0.`create_time`, T0.`update_time`, T0.`memo`"
+
+	// 关联查询
+	var relatedSql = "LEFT JOIN paper AS T1 ON T1.id = T0.paper_id"
+	fields += ", T1.`name` AS paper_name"
 
 	// 连表查询
 	var sql = fmt.Sprintf("SELECT %s FROM plan AS T0 %s %s %s %s", fields, relatedSql, whereSql, orderSql, pageSql)

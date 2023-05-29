@@ -30,7 +30,7 @@ func (c *PaperController) List() {
 	}
 
 	// 查询列表
-	list, total, err := models.ReadPaperList(param)
+	list, total, err := models.ReadPaperListRaw(param)
 	if err != nil {
 		logs.Info("c[Paper][List]: 查询列表失败, err = %s", err.Error())
 		c.Failure("获取数据失败")

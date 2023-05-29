@@ -26,7 +26,7 @@ func (c *PlanController) List() {
 	}
 
 	// 查询列表
-	list, total, err := models.ReadPlanList(param)
+	list, total, err := models.ReadPlanRelListRaw(param)
 	if err != nil {
 		logs.Info("c[Plan][List]: 查询列表失败, err = %s", err.Error())
 		c.Failure("获取数据失败")
@@ -49,7 +49,7 @@ func (c *PlanController) Detail() {
 	}
 
 	// 查询详情
-	m, err := models.ReadPlanOne(param.ID)
+	m, err := models.ReadPlanRelOne(param.ID)
 	if err != nil {
 		logs.Info("c[Plan][Detail]: 查询详情失败, err = %s", err.Error())
 		c.Failure("获取数据失败")
@@ -92,7 +92,7 @@ func (c *PlanController) Update() {
 
 	// 更新
 	m.UpdateTime = time.Now().Unix()
-	_, err = models.UpdatePlanOne(m, "name", "start_time", "end_time", "duration", "publish_time", "status", "query_grade", "update_time", "memo")
+	_, err = models.UpdatePlanOne(m, "name", "paper_id", "start_time", "end_time", "duration", "update_time", "memo")
 	if err != nil {
 		logs.Info("c[Plan][Update]: 更新失败, err = %s", err.Error())
 		c.Failure("操作失败")
