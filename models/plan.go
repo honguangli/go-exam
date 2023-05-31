@@ -79,8 +79,7 @@ type PublishPlanParam struct {
 
 // 删除参数
 type DeletePlanParam struct {
-	ID   int   `json:"id"`
-	List []int `json:"list"`
+	ID int `json:"id"`
 }
 
 // 初始化

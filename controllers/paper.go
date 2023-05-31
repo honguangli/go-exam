@@ -145,11 +145,54 @@ func (c *PaperController) Update() {
 		c.Failure("参数错误")
 	}
 
+	// 查询详情
+	om, err := models.ReadPaperOne(m.ID)
+	if err != nil {
+		logs.Info("c[Paper][Update]: 查询详情失败, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+	if om.Status != models.PaperEdit {
+		c.Failure("操作失败")
+	}
+
 	// 更新
 	m.UpdateTime = time.Now().Unix()
 	_, err = models.UpdatePaperOne(m, "name", "status", "update_time", "memo")
 	if err != nil {
 		logs.Info("c[Paper][Update]: 更新失败, err = %s", err.Error())
+		c.Failure("操作失败")
+	}
+
+	c.Success(nil)
+}
+
+// 发布
+func (c *PaperController) Publish() {
+	var param models.PublishPaperParam
+	var err error
+	if err = c.ParseParam(&param); err != nil {
+		logs.Info("c[Plan][Publish]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+	if param.ID <= 0 {
+		logs.Info("c[Plan][Publish]: 参数错误, id非法, req = %s", c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+
+	// 查询详情
+	om, err := models.ReadPaperOne(param.ID)
+	if err != nil {
+		logs.Info("c[Paper][Publish]: 查询详情失败, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+	if om.Status != models.PaperEdit {
+		c.Failure("操作失败")
+	}
+
+	// 发布
+	_, err = models.UpdatePaperOne(models.Paper{ID: param.ID, Status: models.PaperFreeze}, "status")
+	if err != nil {
+		logs.Info("c[Plan][Publish]: 更新失败, err = %s", err.Error())
 		c.Failure("操作失败")
 	}
 
@@ -164,39 +207,26 @@ func (c *PaperController) Delete() {
 		logs.Info("c[Paper][Delete]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
 		c.Failure("参数错误")
 	}
-	if param.ID < 0 && len(param.List) == 0 {
-		logs.Info("c[Paper][Delete]: 参数错误, 无效id或list为空, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+	if param.ID < 0 {
+		logs.Info("c[Paper][Delete]: 参数错误, 无效id, req = %s", err.Error(), c.Ctx.Input.RequestBody)
 		c.Failure("参数错误")
 	}
-	for _, v := range param.List {
-		if v <= 0 {
-			logs.Info("c[Paper][Delete]: 参数错误, 无效id, req = %s", err.Error(), c.Ctx.Input.RequestBody)
-			c.Failure("参数错误")
-		}
+
+	// 查询详情
+	om, err := models.ReadPaperOne(param.ID)
+	if err != nil {
+		logs.Info("c[Paper][Delete]: 查询详情失败, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+	if om.Status != models.PaperEdit {
+		c.Failure("操作失败")
 	}
 
-	var num int64
-	if param.ID > 0 {
-		// 删除
-		num, err = models.DeletePaperOne(param.ID)
-		if err != nil {
-			logs.Info("c[Paper][Delete]: 删除失败, err = %s", err.Error())
-			c.Failure("操作失败")
-		}
-	} else if len(param.List) == 1 {
-		// 删除
-		num, err = models.DeletePaperOne(param.List[0])
-		if err != nil {
-			logs.Info("c[Paper][Delete]: 删除失败, err = %s", err.Error())
-			c.Failure("操作失败")
-		}
-	} else {
-		// 批量删除
-		num, err = models.DeletePaperMulti(param.List)
-		if err != nil {
-			logs.Info("c[Paper][Delete]: 批量删除失败, err = %s", err.Error())
-			c.Failure("操作失败")
-		}
+	// 删除
+	num, err := models.DeletePaperOne(param.ID)
+	if err != nil {
+		logs.Info("c[Paper][Delete]: 删除失败, err = %s", err.Error())
+		c.Failure("操作失败")
 	}
 
 	var res = make(map[string]interface{})

@@ -46,6 +46,7 @@ func init() {
 				beego.NSRouter("/gen", &controllers.PaperController{}, "Post:Auto"),
 				beego.NSRouter("/create", &controllers.PaperController{}, "Post:Create"),
 				beego.NSRouter("/update", &controllers.PaperController{}, "Post:Update"),
+				beego.NSRouter("/publish", &controllers.PaperController{}, "Post:Publish"),
 				beego.NSRouter("/delete", &controllers.PaperController{}, "Post:Delete"),
 			),
 			// 考试计划
@@ -59,6 +60,13 @@ func init() {
 				beego.NSRouter("/class/list", &controllers.PlanController{}, "Post:ClassList"),
 				beego.NSRouter("/class/push", &controllers.PlanController{}, "Post:PushClass"),
 				beego.NSRouter("/class/delete", &controllers.PlanController{}, "Post:DeleteClass"),
+			),
+			// 成绩
+			beego.NSNamespace("/grade",
+				beego.NSRouter("/list", &controllers.GradeController{}, "Post:List"),
+				beego.NSRouter("/detail", &controllers.GradeController{}, "Post:Detail"),
+				beego.NSRouter("/user/exam/list", &controllers.GradeController{}, "Post:UserExamList"),
+				beego.NSRouter("/user/grade/list", &controllers.GradeController{}, "Post:UserGradeList"),
 			),
 
 			// 权限

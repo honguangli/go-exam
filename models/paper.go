@@ -39,8 +39,8 @@ type Paper struct {
 
 // 状态
 const (
-	PAPER_EDIT   = 0 // 草稿
-	PAPER_FREEZE = 1 // 已发布
+	PaperEdit   = 0 // 草稿
+	PaperFreeze = 1 // 已发布
 )
 
 // 查询详情参数
@@ -57,10 +57,14 @@ type ReadPaperListParam struct {
 	ClosePage bool   `form:"close_page" json:"close_page"`
 }
 
+// 发布参数
+type PublishPaperParam struct {
+	ID int `json:"id"`
+}
+
 // 删除参数
 type DeletePaperParam struct {
-	ID   int   `json:"id"`
-	List []int `json:"list"`
+	ID int `json:"id"`
 }
 
 // 初始化
@@ -137,10 +141,10 @@ func ReadPaperListRaw(param ReadPaperListParam) (list []*Paper, total int64, err
 		args = append(args, fmt.Sprintf("%%%s%%", param.Name))
 	}
 
-	//if param.Status >= 0 {
-	//	whereSql += " AND T0.`status` = ?"
-	//	args = append(args, param.Status)
-	//}
+	if param.Status >= 0 {
+		whereSql += " AND T0.`status` = ?"
+		args = append(args, param.Status)
+	}
 
 	// 排序
 	var orderSql = "ORDER BY "
@@ -268,7 +272,7 @@ func InsertPaperOneWithQuestionList(m Paper, list []*Question) (id int64, err er
 	}
 
 	// 保存试卷
-	m.Status = PAPER_EDIT
+	m.Status = PaperEdit
 	m.CreateTime = time.Now().Unix()
 	id, err = o.Insert(&m)
 	if err != nil {
@@ -352,7 +356,7 @@ func InsertPaperOneWithQuestionListV2(m Paper, list []*Question) (id int64, err 
 	}
 
 	// 保存试卷
-	m.Status = PAPER_EDIT
+	m.Status = PaperEdit
 	m.CreateTime = time.Now().Unix()
 	id, err = o.Insert(&m)
 	if err != nil {

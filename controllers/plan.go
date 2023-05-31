@@ -90,6 +90,16 @@ func (c *PlanController) Update() {
 		c.Failure("参数错误")
 	}
 
+	// 查询详情
+	om, err := models.ReadPlanOne(m.ID)
+	if err != nil {
+		logs.Info("c[Plan][Update]: 查询详情失败, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+	if om.Status != models.PlanDefault {
+		c.Failure("操作失败")
+	}
+
 	// 更新
 	m.UpdateTime = time.Now().Unix()
 	_, err = models.UpdatePlanOne(m, "name", "paper_id", "start_time", "end_time", "duration", "update_time", "memo")
@@ -116,6 +126,9 @@ func (c *PlanController) Publish() {
 
 	// 发布
 	err = models.PublishPlan(param)
+	if err == models.ErrStudentsEmpty {
+		c.Failure(err.Error())
+	}
 	if err != nil {
 		logs.Info("c[Plan][Publish]: 更新失败, err = %s", err.Error())
 		c.Failure("操作失败")
@@ -132,39 +145,26 @@ func (c *PlanController) Delete() {
 		logs.Info("c[Plan][Delete]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
 		c.Failure("参数错误")
 	}
-	if param.ID < 0 && len(param.List) == 0 {
-		logs.Info("c[Plan][Delete]: 参数错误, 无效id或list为空, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+	if param.ID < 0 {
+		logs.Info("c[Plan][Delete]: 参数错误, 无效id, req = %s", err.Error(), c.Ctx.Input.RequestBody)
 		c.Failure("参数错误")
 	}
-	for _, v := range param.List {
-		if v <= 0 {
-			logs.Info("c[Plan][Delete]: 参数错误, 无效id, req = %s", err.Error(), c.Ctx.Input.RequestBody)
-			c.Failure("参数错误")
-		}
+
+	// 查询详情
+	om, err := models.ReadPlanOne(param.ID)
+	if err != nil {
+		logs.Info("c[Plan][Delete]: 查询详情失败, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+	if om.Status != models.PlanDefault {
+		c.Failure("操作失败")
 	}
 
-	var num int64
-	if param.ID > 0 {
-		// 删除
-		num, err = models.DeletePlanOne(param.ID)
-		if err != nil {
-			logs.Info("c[Plan][Delete]: 删除失败, err = %s", err.Error())
-			c.Failure("操作失败")
-		}
-	} else if len(param.List) == 1 {
-		// 删除
-		num, err = models.DeletePlanOne(param.List[0])
-		if err != nil {
-			logs.Info("c[Plan][Delete]: 删除失败, err = %s", err.Error())
-			c.Failure("操作失败")
-		}
-	} else {
-		// 批量删除
-		num, err = models.DeletePlanMulti(param.List)
-		if err != nil {
-			logs.Info("c[Plan][Delete]: 批量删除失败, err = %s", err.Error())
-			c.Failure("操作失败")
-		}
+	// 删除
+	num, err := models.DeletePlanOne(param.ID)
+	if err != nil {
+		logs.Info("c[Plan][Delete]: 删除失败, err = %s", err.Error())
+		c.Failure("操作失败")
 	}
 
 	var res = make(map[string]interface{})
@@ -205,7 +205,17 @@ func (c *PlanController) PushClass() {
 		c.Failure("参数错误")
 	}
 
-	// 添加用户
+	// 查询详情
+	om, err := models.ReadPlanOne(param.PlanID)
+	if err != nil {
+		logs.Info("c[Plan][PushClass]: 查询详情失败, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+	if om.Status != models.PlanDefault {
+		c.Failure("操作失败")
+	}
+
+	// 添加班级
 	num, err := models.InsertOrUpdatePlanClassRelMulti(param)
 	if err != nil {
 		logs.Info("c[Class][PushClass]: 更新失败, err = %s", err.Error())
@@ -235,6 +245,16 @@ func (c *PlanController) DeleteClass() {
 			logs.Info("c[Class][DeleteClass]: 参数错误, 无效id, req = %s", err.Error(), c.Ctx.Input.RequestBody)
 			c.Failure("参数错误")
 		}
+	}
+
+	// 查询详情
+	om, err := models.ReadPlanOne(param.ID)
+	if err != nil {
+		logs.Info("c[Plan][DeleteClass]: 查询详情失败, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+	if om.Status != models.PlanDefault {
+		c.Failure("操作失败")
 	}
 
 	var num int64
