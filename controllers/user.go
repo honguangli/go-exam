@@ -27,7 +27,7 @@ func (c *UserController) List() {
 	}
 
 	// 查询列表
-	list, total, err := models.ReadUserList(param)
+	list, total, err := models.ReadUserListRaw(param)
 	if err != nil {
 		logs.Info("c[User][List]: 查询列表失败, err = %s", err.Error())
 		c.Failure("获取数据失败")

@@ -54,6 +54,7 @@ func init() {
 				beego.NSRouter("/detail", &controllers.PlanController{}, "Post:Detail"),
 				beego.NSRouter("/create", &controllers.PlanController{}, "Post:Create"),
 				beego.NSRouter("/update", &controllers.PlanController{}, "Post:Update"),
+				beego.NSRouter("/publish", &controllers.PlanController{}, "Post:Publish"),
 				beego.NSRouter("/delete", &controllers.PlanController{}, "Post:Delete"),
 				beego.NSRouter("/class/list", &controllers.PlanController{}, "Post:ClassList"),
 				beego.NSRouter("/class/push", &controllers.PlanController{}, "Post:PushClass"),

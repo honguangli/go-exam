@@ -10,7 +10,7 @@ import (
 type User struct {
 	ID         int    `orm:"column(id)" form:"id" json:"id"`
 	Name       string `orm:"column(name)" form:"name" json:"name"`
-	Password   string `orm:"column(password)" form:"password" json:"-"`
+	Password   string `orm:"column(password)" form:"password" json:"password"`
 	Type       int    `orm:"column(type)" form:"type" json:"type"`
 	TrueName   string `orm:"column(true_name)" form:"true_name" json:"true_name"`
 	Mobile     string `orm:"column(mobile)" form:"mobile" json:"mobile"`
@@ -110,18 +110,6 @@ func ReadUserList(param ReadUserListParam) (list []*User, total int64, err error
 	list = make([]*User, 0)
 	query := orm.NewOrm().QueryTable(UserTBName())
 
-	if len(param.Name) > 0 {
-		query = query.Filter("name__icontains", param.Name)
-	}
-
-	if param.Type != USER_TYPE_IGNORE {
-		query = query.Filter("type", param.Type)
-	}
-
-	if param.Status != USER_STATUS_IGNORE {
-		query = query.Filter("status", param.Status)
-	}
-
 	sortOrder := "id"
 	switch param.Sort {
 	}
@@ -143,6 +131,21 @@ func ReadUserListRaw(param ReadUserListParam) (list []*User, total int64, err er
 	var args = make([]interface{}, 0)
 	var whereSql = "WHERE 1=1"
 
+	if len(param.Name) > 0 {
+		whereSql += " AND T0.`name` LIKE ?"
+		args = append(args, fmt.Sprintf("%%%s%%", param.Name))
+	}
+
+	if param.Type != USER_TYPE_IGNORE {
+		whereSql += " AND T0.`type` = ?"
+		args = append(args, param.Type)
+	}
+
+	if param.Status != USER_STATUS_IGNORE {
+		whereSql += " AND T0.`status` = ?"
+		args = append(args, param.Status)
+	}
+
 	// 排序
 	var orderSql = "ORDER BY "
 	switch param.Sort {
@@ -160,7 +163,9 @@ func ReadUserListRaw(param ReadUserListParam) (list []*User, total int64, err er
 	}
 
 	// 查询字段
-	var fields = "T0.`id`, T0.`name`, T0.`password`, T0.`type`, T0.`true_name`, T0.`mobile`, T0.`email`, T0.`status`, T0.`create_time`, T0.`update_time`, T0.`memo`"
+	var fields = "T0.`id`, T0.`name`" +
+		// ", T0.`password`" +
+		", T0.`type`, T0.`true_name`, T0.`mobile`, T0.`email`, T0.`status`, T0.`create_time`, T0.`update_time`, T0.`memo`"
 
 	// 关联查询
 	var relatedSql string

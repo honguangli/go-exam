@@ -1,8 +1,10 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"github.com/astaxie/beego/orm"
+	"time"
 )
 
 // 考试计划表
@@ -10,10 +12,10 @@ type Plan struct {
 	ID          int    `orm:"column(id)" form:"id" json:"id"`
 	Name        string `orm:"column(name)" form:"name" json:"name"`
 	PaperID     int    `orm:"column(paper_id)" form:"paper_id" json:"paper_id"`
-	StartTime   int    `orm:"column(start_time)" form:"start_time" json:"start_time"`
-	EndTime     int    `orm:"column(end_time)" form:"end_time" json:"end_time"`
+	StartTime   int64  `orm:"column(start_time)" form:"start_time" json:"start_time"`
+	EndTime     int64  `orm:"column(end_time)" form:"end_time" json:"end_time"`
 	Duration    int    `orm:"column(duration)" form:"duration" json:"duration"`
-	PublishTime int    `orm:"column(publish_time)" form:"publish_time" json:"publish_time"`
+	PublishTime int64  `orm:"column(publish_time)" form:"publish_time" json:"publish_time"`
 	Status      int    `orm:"column(status)" form:"status" json:"status"`
 	QueryGrade  int8   `orm:"column(query_grade)" form:"query_grade" json:"query_grade"`
 	CreateTime  int64  `orm:"column(create_time)" form:"create_time" json:"create_time"`
@@ -26,10 +28,10 @@ type PlanRel struct {
 	ID          int    `orm:"column(id)" form:"id" json:"id"`
 	Name        string `orm:"column(name)" form:"name" json:"name"`
 	PaperID     int    `orm:"column(paper_id)" form:"paper_id" json:"paper_id"`
-	StartTime   int    `orm:"column(start_time)" form:"start_time" json:"start_time"`
-	EndTime     int    `orm:"column(end_time)" form:"end_time" json:"end_time"`
+	StartTime   int64  `orm:"column(start_time)" form:"start_time" json:"start_time"`
+	EndTime     int64  `orm:"column(end_time)" form:"end_time" json:"end_time"`
 	Duration    int    `orm:"column(duration)" form:"duration" json:"duration"`
-	PublishTime int    `orm:"column(publish_time)" form:"publish_time" json:"publish_time"`
+	PublishTime int64  `orm:"column(publish_time)" form:"publish_time" json:"publish_time"`
 	Status      int    `orm:"column(status)" form:"status" json:"status"`
 	QueryGrade  int8   `orm:"column(query_grade)" form:"query_grade" json:"query_grade"`
 	CreateTime  int64  `orm:"column(create_time)" form:"create_time" json:"create_time"`
@@ -39,6 +41,23 @@ type PlanRel struct {
 	// 试卷信息
 	PaperName string `orm:"column(paper_name)" form:"paper_name" json:"paper_name"`
 }
+
+// 状态
+const (
+	PlanDefault   = 0 // 待发布
+	PlanPublished = 1 // 已发布
+	PlanCanceled  = 2 // 已取消
+	PlanEnded     = 3 // 已结束
+)
+
+// 成绩状态
+const (
+	PlanGradeDisable = 0 // 未出成绩不可查询
+	PlanGradeEnable  = 1 // 可查询
+)
+
+// 异常
+var ErrStudentsEmpty = errors.New("考生列表为空")
 
 // 查询详情参数
 type ReadPlanDetailParam struct {
@@ -51,6 +70,11 @@ type ReadPlanListParam struct {
 	Name      string `json:"name"`
 	Status    int    `json:"status"`
 	ClosePage bool   `form:"close_page" json:"close_page"`
+}
+
+// 发布参数
+type PublishPlanParam struct {
+	ID int `json:"id"`
 }
 
 // 删除参数
@@ -279,5 +303,84 @@ func DeletePlanOne(id int) (num int64, err error) {
 func DeletePlanMulti(ids []int) (num int64, err error) {
 	o := orm.NewOrm()
 	num, err = o.QueryTable(PlanTBName()).Filter("id__in", ids).Delete()
+	return
+}
+
+// 发布考试计划
+func PublishPlan(param PublishPlanParam) (err error) {
+	o := orm.NewOrm()
+
+	// 查询考试计划
+	var m = Plan{
+		ID: param.ID,
+	}
+	err = o.Read(&m)
+	if err != nil {
+		return
+	}
+
+	if m.Status != PlanDefault {
+		return errors.New("状态异常")
+	}
+
+	// 查询考生列表
+	var list = make([]ClassUserRel, 0)
+	_, err = o.Raw("SELECT DISTINCT T0.user_id FROM class_user_rel AS T0"+
+		" LEFT JOIN plan_class_rel AS T1 ON T1.class_id = T0.class_id"+
+		" WHERE T1.plan_id = ?"+
+		" ORDER BY T0.user_id ASC", param.ID).QueryRows(&list)
+	if err == orm.ErrNoRows {
+		return ErrStudentsEmpty
+	}
+	if err != nil {
+		return
+	}
+	if len(list) == 0 {
+		return ErrStudentsEmpty
+	}
+
+	var grades = make([]Grade, len(list))
+	for k, v := range list {
+		grades[k] = Grade{
+			PlanID:          m.ID,
+			PaperID:         m.PaperID,
+			UserID:          v.UserID,
+			Score:           0,
+			ObjectiveScore:  0,
+			SubjectiveScore: 0,
+			Status:          GradeDefault,
+			StartTime:       0,
+			EndTime:         0,
+			Duration:        0,
+			Memo:            "",
+		}
+	}
+
+	var nowUnix = time.Now().Unix()
+
+	// 开启事务
+	err = o.Begin()
+	if err != nil {
+		return
+	}
+
+	// 更新考试计划状态
+	m.PublishTime = nowUnix
+	m.Status = PlanPublished
+	m.UpdateTime = nowUnix
+	_, err = o.Update(&m, "publish_time", "status", "update_time")
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 保存考生考试计划
+	_, err = o.InsertMulti(100, grades)
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	err = o.Commit()
 	return
 }

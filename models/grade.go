@@ -21,6 +21,16 @@ type Grade struct {
 	Memo            string `orm:"column(memo)" form:"memo" json:"memo"`
 }
 
+// 状态
+const (
+	GradeDefault  = 0 // 待参加考试
+	GradeUnSubmit = 1 // 待交卷
+	GradeSubmit   = 2 // 已交卷待评分
+	GradeMarking  = 3 // 部分评分
+	GradeMarked   = 4 // 评分完成
+	GradeCancel   = 5 // 考试取消
+)
+
 // 查询列表参数
 type ReadGradeListParam struct {
 	BaseQueryParam

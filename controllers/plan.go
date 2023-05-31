@@ -101,6 +101,29 @@ func (c *PlanController) Update() {
 	c.Success(nil)
 }
 
+// 发布
+func (c *PlanController) Publish() {
+	var param models.PublishPlanParam
+	var err error
+	if err = c.ParseParam(&param); err != nil {
+		logs.Info("c[Plan][Publish]: 参数错误, err = %s, req = %s", err.Error(), c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+	if param.ID <= 0 {
+		logs.Info("c[Plan][Publish]: 参数错误, id非法, req = %s", c.Ctx.Input.RequestBody)
+		c.Failure("参数错误")
+	}
+
+	// 发布
+	err = models.PublishPlan(param)
+	if err != nil {
+		logs.Info("c[Plan][Publish]: 更新失败, err = %s", err.Error())
+		c.Failure("操作失败")
+	}
+
+	c.Success(nil)
+}
+
 // 删除
 func (c *PlanController) Delete() {
 	var param models.DeletePlanParam
