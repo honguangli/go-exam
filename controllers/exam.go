@@ -99,7 +99,7 @@ func (c *ExamController) Start() {
 		logs.Info("c[exam][start]: 考试计划已结束")
 		c.Failure("考试已结束")
 	}
-	if nowUnix >= (m.StartTime + int64(m.PlanDuration*60)) {
+	if m.StartTime > 0 && nowUnix >= (m.StartTime+int64(m.PlanDuration*60)) {
 		logs.Info("c[exam][start]: 考试时间已超过")
 		c.Failure("考试已结束")
 	}
