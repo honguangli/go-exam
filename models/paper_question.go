@@ -26,6 +26,7 @@ type PaperQuestion struct {
 // 查询列表参数
 type ReadPaperQuestionListParam struct {
 	BaseQueryParam
+	PaperID   int  `json:"paper_id"`
 	ClosePage bool `form:"close_page" json:"close_page"`
 }
 
@@ -95,6 +96,11 @@ func ReadPaperQuestionListRaw(param ReadPaperQuestionListParam) (list []*PaperQu
 	list = make([]*PaperQuestion, 0)
 	var args = make([]interface{}, 0)
 	var whereSql = "WHERE 1=1"
+
+	if param.PaperID > 0 {
+		whereSql += " AND T0.`paper_id` = ?"
+		args = append(args, param.PaperID)
+	}
 
 	// 排序
 	var orderSql = "ORDER BY "

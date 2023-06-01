@@ -16,9 +16,9 @@ type Grade struct {
 	ObjectiveScore  int    `orm:"column(objective_score)" form:"objective_score" json:"objective_score"`
 	SubjectiveScore int    `orm:"column(subjective_score)" form:"subjective_score" json:"subjective_score"`
 	Status          int    `orm:"column(status)" form:"status" json:"status"`
-	StartTime       int    `orm:"column(start_time)" form:"start_time" json:"start_time"`
-	EndTime         int    `orm:"column(end_time)" form:"end_time" json:"end_time"`
-	Duration        int    `orm:"column(duration)" form:"duration" json:"duration"`
+	StartTime       int64  `orm:"column(start_time)" form:"start_time" json:"start_time"`
+	EndTime         int64  `orm:"column(end_time)" form:"end_time" json:"end_time"`
+	Duration        int64  `orm:"column(duration)" form:"duration" json:"duration"`
 	Memo            string `orm:"column(memo)" form:"memo" json:"memo"`
 }
 
@@ -32,9 +32,9 @@ type GradeRel struct {
 	ObjectiveScore  int    `orm:"column(objective_score)" form:"objective_score" json:"objective_score"`
 	SubjectiveScore int    `orm:"column(subjective_score)" form:"subjective_score" json:"subjective_score"`
 	Status          int    `orm:"column(status)" form:"status" json:"status"`
-	StartTime       int    `orm:"column(start_time)" form:"start_time" json:"start_time"`
-	EndTime         int    `orm:"column(end_time)" form:"end_time" json:"end_time"`
-	Duration        int    `orm:"column(duration)" form:"duration" json:"duration"`
+	StartTime       int64  `orm:"column(start_time)" form:"start_time" json:"start_time"`
+	EndTime         int64  `orm:"column(end_time)" form:"end_time" json:"end_time"`
+	Duration        int64  `orm:"column(duration)" form:"duration" json:"duration"`
 	Memo            string `orm:"column(memo)" form:"memo" json:"memo"`
 
 	// 考试计划信息
@@ -94,6 +94,19 @@ type ReadGradeDetailParam struct {
 	ID int `json:"id"`
 }
 
+// 开始考试参数
+type StartExamParam struct {
+	ID       int    `json:"id"`
+	UserName string `json:"user_name"`
+}
+
+// 提交答题卡参数
+type SubmitExamParam struct {
+	ID       int          `json:"id"`
+	UserName string       `json:"user_name"`
+	Answers  []AnswerItem `json:"answers"`
+}
+
 // 初始化
 func init() {
 	orm.RegisterModel(new(Grade))
@@ -129,6 +142,26 @@ func ReadGradeOne(id int) (m Grade, err error) {
 	o := orm.NewOrm()
 	m.ID = id
 	err = o.Read(&m)
+	return
+}
+
+// 查询单个对象
+func ReadGradeRelOne(id int) (m GradeRel, err error) {
+	// 查询字段
+	var fields = "T0.`id`, T0.`plan_id`, T0.`paper_id`, T0.`user_id`, T0.`score`, T0.`objective_score`, T0.`subjective_score`, T0.`status`, T0.`start_time`, T0.`end_time`, T0.`duration`, T0.`memo`"
+
+	// 关联查询
+	var relatedSql = "LEFT JOIN plan AS T1 ON T1.id = T0.plan_id" +
+		" LEFT JOIN paper AS T2 ON T2.id = T0.paper_id" +
+		" LEFT JOIN user AS T3 ON T3.id = T0.user_id"
+	fields += ", T1.`name` AS plan_name, T1.`start_time` AS plan_start_time, T1.`end_time` AS plan_end_time, T1.`duration` AS plan_duration, T1.`status` AS plan_status, T1.`query_grade` AS plan_query_grade" +
+		", T2.`name` AS paper_name, T2.`subject_id` AS paper_subject_id, T2.`knowledge_ids` AS paper_knowledge_ids, T2.`score` AS paper_score, T2.`pass_score` AS paper_pass_score" +
+		", T3.`name` AS user_name, T3.`true_name` AS user_true_name, T3.`mobile` AS user_mobile, T3.`email` AS user_email, T3.`status` AS user_status"
+
+	// 连表查询
+	var sql = fmt.Sprintf("SELECT %s FROM grade AS T0 %s WHERE T0.id = ?", fields, relatedSql)
+
+	err = orm.NewOrm().Raw(sql, id).QueryRow(&m)
 	return
 }
 

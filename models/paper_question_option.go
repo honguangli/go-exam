@@ -8,6 +8,7 @@ import (
 // 试卷试题选项表
 type PaperQuestionOption struct {
 	ID         int    `orm:"column(id)" form:"id" json:"id"`
+	PaperID    int    `orm:"column(paper_id)" form:"paper_id" json:"paper_id"`
 	QuestionID int    `orm:"column(question_id)" form:"question_id" json:"question_id"`
 	Tag        string `orm:"column(tag)" form:"tag" json:"tag"`
 	Content    string `orm:"column(content)" form:"content" json:"content"`
@@ -18,6 +19,7 @@ type PaperQuestionOption struct {
 // 查询列表参数
 type ReadPaperQuestionOptionListParam struct {
 	BaseQueryParam
+	PaperID   int  `json:"paper_id"`
 	ClosePage bool `form:"close_page" json:"close_page"`
 }
 
@@ -85,6 +87,11 @@ func ReadPaperQuestionOptionListRaw(param ReadPaperQuestionOptionListParam) (lis
 	var args = make([]interface{}, 0)
 	var whereSql = "WHERE 1=1"
 
+	if param.PaperID > 0 {
+		whereSql += " AND T0.`paper_id` = ?"
+		args = append(args, param.PaperID)
+	}
+
 	// 排序
 	var orderSql = "ORDER BY "
 	switch param.Sort {
@@ -102,7 +109,7 @@ func ReadPaperQuestionOptionListRaw(param ReadPaperQuestionOptionListParam) (lis
 	}
 
 	// 查询字段
-	var fields = "T0.`id`, T0.`question_id`, T0.`tag`, T0.`content`, T0.`is_right`, T0.`memo`"
+	var fields = "T0.`id`, T0.`paper_id`, T0.`question_id`, T0.`tag`, T0.`content`, T0.`is_right`, T0.`memo`"
 
 	// 关联查询
 	var relatedSql string
@@ -150,7 +157,7 @@ func InsertPaperQuestionOptionMulti(list []PaperQuestionOption) (num int64, err 
 func UpdatePaperQuestionOptionOne(m PaperQuestionOption, fields ...string) (num int64, err error) {
 	o := orm.NewOrm()
 	if len(fields) == 0 {
-		fields = []string{"question_id", "tag", "content", "is_right", "memo"}
+		fields = []string{"paper_id", "question_id", "tag", "content", "is_right", "memo"}
 	}
 	num, err = o.Update(&m, fields...)
 	return

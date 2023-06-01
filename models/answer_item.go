@@ -10,12 +10,18 @@ type AnswerItem struct {
 	ID         int    `orm:"column(id)" form:"id" json:"id"`
 	AnswerID   int    `orm:"column(answer_id)" form:"answer_id" json:"answer_id"`
 	QuestionID int    `orm:"column(question_id)" form:"question_id" json:"question_id"`
-	OptionID   int    `orm:"column(option_id)" form:"option_id" json:"option_id"`
+	OptionIds  string `orm:"column(option_ids)" form:"option_ids" json:"option_ids"`
 	Content    string `orm:"column(content)" form:"content" json:"content"`
 	Check      int8   `orm:"column(check)" form:"check" json:"check"`
 	Score      int    `orm:"column(score)" form:"score" json:"score"`
 	Memo       string `orm:"column(memo)" form:"memo" json:"memo"`
 }
+
+// 状态
+const (
+	AnswerItemUnCheck = 0 // 未评分
+	AnswerItemChecked = 1 // 已评分
+)
 
 // 查询列表参数
 type ReadAnswerItemListParam struct {
@@ -104,7 +110,7 @@ func ReadAnswerItemListRaw(param ReadAnswerItemListParam) (list []*AnswerItem, t
 	}
 
 	// 查询字段
-	var fields = "T0.`id`, T0.`answer_id`, T0.`question_id`, T0.`option_id`, T0.`content`, T0.`check`, T0.`score`, T0.`memo`"
+	var fields = "T0.`id`, T0.`answer_id`, T0.`question_id`, T0.`option_ids`, T0.`content`, T0.`check`, T0.`score`, T0.`memo`"
 
 	// 关联查询
 	var relatedSql string
@@ -152,7 +158,7 @@ func InsertAnswerItemMulti(list []AnswerItem) (num int64, err error) {
 func UpdateAnswerItemOne(m AnswerItem, fields ...string) (num int64, err error) {
 	o := orm.NewOrm()
 	if len(fields) == 0 {
-		fields = []string{"answer_id", "question_id", "option_id", "content", "check", "score", "memo"}
+		fields = []string{"answer_id", "question_id", "option_ids", "content", "check", "score", "memo"}
 	}
 	num, err = o.Update(&m, fields...)
 	return

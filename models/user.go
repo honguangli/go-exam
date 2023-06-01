@@ -23,17 +23,17 @@ type User struct {
 
 // 类型
 const (
-	USER_TYPE_IGNORE = -1 // 忽略类型
-	USER_ADMIN       = 1  // 管理员
-	USER_TEACHER     = 2  // 教师
-	USER_STUDENT     = 3  // 学生
+	UserTypeIgnore = -1 // 忽略类型
+	UserAdmin      = 1  // 管理员
+	UserTeacher    = 2  // 教师
+	UserStudent    = 3  // 学生
 )
 
 // 状态
 const (
-	USER_STATUS_IGNORE = -1 // 忽略状态
-	USER_DISABLE       = 0  // 禁用
-	USER_ENABLE        = 1  // 正常
+	UserStatusIgnore = -1 // 忽略状态
+	UserDisable      = 0  // 禁用
+	UserEnable       = 1  // 正常
 )
 
 // 默认密码
@@ -105,6 +105,12 @@ func ReadUserOne(id int) (m User, err error) {
 	return
 }
 
+// 查询单个对象
+func ReadUserOneByName(name string) (m User, err error) {
+	err = orm.NewOrm().QueryTable(UserTBName()).Filter("name", name).One(&m)
+	return
+}
+
 // 查询多个对象
 func ReadUserList(param ReadUserListParam) (list []*User, total int64, err error) {
 	list = make([]*User, 0)
@@ -136,12 +142,12 @@ func ReadUserListRaw(param ReadUserListParam) (list []*User, total int64, err er
 		args = append(args, fmt.Sprintf("%%%s%%", param.Name))
 	}
 
-	if param.Type != USER_TYPE_IGNORE {
+	if param.Type != UserTypeIgnore {
 		whereSql += " AND T0.`type` = ?"
 		args = append(args, param.Type)
 	}
 
-	if param.Status != USER_STATUS_IGNORE {
+	if param.Status != UserStatusIgnore {
 		whereSql += " AND T0.`status` = ?"
 		args = append(args, param.Status)
 	}

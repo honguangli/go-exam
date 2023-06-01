@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"github.com/astaxie/beego/orm"
+	"time"
 )
 
 // 考生试卷答题表
@@ -12,7 +13,7 @@ type Answer struct {
 	PaperID    int    `orm:"column(paper_id)" form:"paper_id" json:"paper_id"`
 	UserID     int    `orm:"column(user_id)" form:"user_id" json:"user_id"`
 	GradeID    int    `orm:"column(grade_id)" form:"grade_id" json:"grade_id"`
-	SubmitTime int    `orm:"column(submit_time)" form:"submit_time" json:"submit_time"`
+	SubmitTime int64  `orm:"column(submit_time)" form:"submit_time" json:"submit_time"`
 	Memo       string `orm:"column(memo)" form:"memo" json:"memo"`
 }
 
@@ -175,5 +176,54 @@ func DeleteAnswerOne(id int) (num int64, err error) {
 func DeleteAnswerMulti(ids []int) (num int64, err error) {
 	o := orm.NewOrm()
 	num, err = o.QueryTable(AnswerTBName()).Filter("id__in", ids).Delete()
+	return
+}
+
+// 保存答题卡
+func SubmitAnswer(grade *GradeRel, param SubmitExamParam) (err error) {
+	o := orm.NewOrm()
+	err = o.Begin()
+	if err != nil {
+		return
+	}
+
+	var nowUnix = time.Now().Unix()
+
+	// 更新考试状态
+	_, err = o.Update(&Grade{ID: grade.ID, Status: GradeSubmit, EndTime: nowUnix, Duration: nowUnix - grade.StartTime}, "status", "end_time", "duration")
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 保存答题卡
+	var m = Answer{
+		PlanID:     grade.PlanID,
+		PaperID:    grade.PaperID,
+		UserID:     grade.UserID,
+		GradeID:    grade.ID,
+		SubmitTime: nowUnix,
+	}
+	_, err = o.Insert(&m)
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	// 保存答题项
+	var items = make([]*AnswerItem, len(param.Answers))
+	for k, v := range param.Answers {
+		v.AnswerID = m.ID
+		v.Check = AnswerItemUnCheck
+		v.Score = 0
+		items[k] = &v
+	}
+	_, err = o.InsertMulti(100, items)
+	if err != nil {
+		o.Rollback()
+		return
+	}
+
+	err = o.Commit()
 	return
 }

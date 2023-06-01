@@ -308,6 +308,7 @@ func InsertPaperOneWithQuestionList(m Paper, list []*Question) (id int64, err er
 			for _, option := range optionList {
 				paperQuestionOptionList = append(paperQuestionOptionList, &PaperQuestionOption{
 					ID:         0,
+					PaperID:    m.ID,
 					QuestionID: paperQuestion.ID,
 					Tag:        option.Tag,
 					Content:    option.Content,
@@ -385,6 +386,7 @@ func InsertPaperOneWithQuestionListV2(m Paper, list []*Question) (id int64, err 
 			for _, option := range optionList {
 				paperQuestionOptionList = append(paperQuestionOptionList, &PaperQuestionOption{
 					ID:         0,
+					PaperID:    m.ID,
 					QuestionID: int(newID),
 					Tag:        option.Tag,
 					Content:    option.Content,

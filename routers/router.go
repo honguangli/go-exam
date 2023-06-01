@@ -61,12 +61,17 @@ func init() {
 				beego.NSRouter("/class/push", &controllers.PlanController{}, "Post:PushClass"),
 				beego.NSRouter("/class/delete", &controllers.PlanController{}, "Post:DeleteClass"),
 			),
+			// 考试
+			beego.NSNamespace("/exam",
+				beego.NSRouter("/list", &controllers.ExamController{}, "Post:List"),
+				beego.NSRouter("/start", &controllers.ExamController{}, "Post:Start"),
+				beego.NSRouter("/submit", &controllers.ExamController{}, "Post:Submit"),
+			),
 			// 成绩
 			beego.NSNamespace("/grade",
 				beego.NSRouter("/list", &controllers.GradeController{}, "Post:List"),
 				beego.NSRouter("/detail", &controllers.GradeController{}, "Post:Detail"),
-				beego.NSRouter("/user/exam/list", &controllers.GradeController{}, "Post:UserExamList"),
-				beego.NSRouter("/user/grade/list", &controllers.GradeController{}, "Post:UserGradeList"),
+				beego.NSRouter("/user/list", &controllers.GradeController{}, "Post:UserGradeList"),
 			),
 
 			// 权限
